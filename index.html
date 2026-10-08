@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guia de Bairro</title>
+  <meta name="description"
+    content="Encontre restaurantes, lojas e serviços no seu bairro. Anuncie seu negócio gratuitamente.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23000'/><text x='5' y='24' font-family='Inter,sans-serif' font-size='22' font-weight='500' fill='%23fff'>G</text></svg>">
+</head>
+
+<body>
+
+  <!-- NAV ─────────────────────────────────────────────────── -->
+  <nav id="navbar">
+    <div class="container nav-inner">
+
+      <a href="#hero" class="nav-logo" id="nav-logo">Guia de Bairro</a>
+
+      <ul class="nav-links">
+        <li><a href="#hero" data-page="hero">Início</a></li>
+        <li><a href="#listings" data-page="listings">Negócios</a></li>
+        <li><a href="#how-it-works" data-page="how-it-works">Como funciona</a></li>
+        <li><a href="#advertise" data-page="advertise">Anunciar</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button id="theme-toggle" aria-label="Alternar tema">Tema</button>
+        <a href="#advertise" class="btn btn-white btn-sm" id="nav-cta">Anuncie grátis</a>
+        <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- STICKY SEARCH (fixa, acompanha a rolagem) ───────────── -->
+  <div id="sticky-search" role="search">
+    <div class="container sticky-search-inner">
+      <div class="sticky-search-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        <input id="sticky-search-input" type="search" placeholder="Busque por restaurante, salão, farmácia..."
+          autocomplete="off" aria-label="Buscar negócios">
+        <button class="btn btn-white btn-sm" id="sticky-search-btn">Buscar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE NAV ──────────────────────────────────────────── -->
+  <div id="mobile-nav-overlay"></div>
+  <nav id="mobile-nav">
+    <a href="#hero" class="mobile-nav-link" data-page="hero">Início</a>
+    <a href="#listings" class="mobile-nav-link" data-page="listings">Negócios</a>
+    <a href="#how-it-works" class="mobile-nav-link" data-page="how-it-works">Como funciona</a>
+    <a href="#advertise" class="mobile-nav-link" data-page="advertise">Anunciar</a>
+    <div style="margin-top:20px">
+      <a href="#advertise" class="btn btn-white" style="width:100%;justify-content:center">Anuncie grátis</a>
+    </div>
+  </nav>
+
+  <!-- HERO ────────────────────────────────────────────────── -->
+  <section id="hero" class="page">
+
+    <p class="hero-label fade-in">Comércio local</p>
+
+    <h1 class="hero-h1 fade-in">
+      Descubra o melhor<br>
+      <strong>do seu bairro</strong>
+    </h1>
+
+    <p class="hero-sub fade-in">
+      Restaurantes, salões, farmácias, serviços e muito mais.<br>
+      Tudo perto de casa.
+    </p>
+
+    <div class="hero-search fade-in" role="search">
+      <span class="hero-search-ico" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+      </span>
+      <input id="hero-search-input" type="search" placeholder="Busque por restaurante, salão, farmácia..."
+        autocomplete="off" aria-label="Buscar negócios">
+      <button class="btn btn-white btn-sm" id="hero-search-btn">Buscar</button>
+    </div>
+
+    <div class="hero-ctas fade-in">
+      <button class="btn btn-ghost btn-lg" id="btn-explore">Explorar negócios</button>
+      <button class="btn btn-white btn-lg" id="btn-advertise">Anuncie seu negócio</button>
+    </div>
+
+    <!-- HERO CHATBOT PREVIEW (Em desenvolvimento) -->
+    <div class="hero-chat-wrap fade-in">
+      <div class="hero-chat-badge">
+        <span class="chat-status-dot"></span>
+        Assistente IA &bull; Em desenvolvimento
+      </div>
+
+      <div class="chat-shell">
+
+        <!-- Barra de título -->
+        <div class="chat-topbar">
+          <div class="chat-topbar-dot"></div>
+          <span class="chat-topbar-name">Assistente do Bairro</span>
+          <span class="chat-topbar-status">Em breve</span>
+        </div>
+
+        <!-- Área de mensagens -->
+        <div class="chat-messages" aria-label="Prévia do chat com IA" aria-disabled="true">
+
+          <div class="chat-msg chat-msg-bot">
+            <div class="chat-msg-avatar" aria-hidden="true">IA</div>
+            <div class="chat-msg-bubble">
+              Olá! Sou o Assistente do Bairro. Em breve você poderá me perguntar sobre comércios, horários de
+              funcionamento, endereços e recomendações — tudo por aqui.
+            </div>
+          </div>
+
+          <div class="chat-msg chat-msg-user">
+            <div class="chat-msg-bubble">
+              Tem alguma padaria artesanal ou café aberto agora por perto?
+            </div>
+          </div>
+
+          <div class="chat-msg chat-msg-bot">
+            <div class="chat-msg-avatar" aria-hidden="true">IA</div>
+            <div class="chat-msg-bubble chat-msg-bubble--typing">
+              <span class="chat-dot"></span>
+              <span class="chat-dot"></span>
+              <span class="chat-dot"></span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Overlay de bloqueio -->
+        <div class="chat-locked" aria-label="Funcionalidade em desenvolvimento">
+          <div class="chat-locked-inner">
+            <div class="chat-locked-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <p>Disponível em breve</p>
+            <span class="chat-locked-sub">IA em desenvolvimento para busca no bairro</span>
+          </div>
+        </div>
+
+        <!-- Input desabilitado -->
+        <div class="chat-input-row">
+          <input type="text" class="chat-input" placeholder="Pergunte sobre negócios do seu bairro..." disabled
+            aria-label="Chat indisponível no momento">
+          <button class="chat-send" disabled aria-label="Enviar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="hero-numbers fade-in" aria-label="Dados da plataforma">
+      <div class="hero-num">
+        <strong><span class="counter-target" data-target="12">12</span>+</strong>
+        <span>Negócios</span>
+      </div>
+      <div class="hero-num">
+        <strong><span class="counter-target" data-target="10">10</span></strong>
+        <span>Categorias</span>
+      </div>
+      <div class="hero-num">
+        <strong><span class="counter-target" data-target="3200">3.200</span>+</strong>
+        <span>Avaliações</span>
+      </div>
+      <div class="hero-num">
+        <strong>Grátis</strong>
+        <span>Para anunciar</span>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- LISTINGS (Negócios & Categorias integradas) ───────── -->
+  <section id="listings" class="page">
+    <div class="container">
+      <span class="section-label fade-in">Estabelecimentos</span>
+      <h2 class="section-h2 fade-in">Negócios do bairro</h2>
+      <p class="section-p fade-in">Navegue pelas categorias ou filtre para encontrar estabelecimentos e ofertas perto de você.</p>
+
+      <!-- Categorias integradas aos Negócios -->
+      <div id="categories-grid" class="cat-pills fade-in" role="list" aria-label="Categorias" style="margin-bottom: 28px;"></div>
+
+      <div class="listings-top">
+        <p class="listings-count" id="listings-count" aria-live="polite">
+          <strong>12</strong> negócios
+        </p>
+
+        <div class="search-input-wrap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <input id="listings-search-input" type="search" placeholder="Filtrar..." autocomplete="off"
+            aria-label="Filtrar negócios">
+        </div>
+
+        <div class="sort-wrap">
+          <label for="sort-select">Ordenar</label>
+          <select id="sort-select" aria-label="Ordenar">
+            <option value="featured">Em destaque</option>
+            <option value="recent">Mais recentes (Ofertas)</option>
+            <option value="views">Mais visitados</option>
+            <option value="distance">Mais próximos</option>
+            <option value="rating">Melhor avaliados</option>
+            <option value="reviews">Mais avaliados</option>
+            <option value="az">A – Z</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="listings-grid" class="cards-grid" role="list" aria-label="Negócios"></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS ────────────────────────────────────────── -->
+  <section id="how-it-works" class="page">
+    <div class="container">
+      <span class="section-label fade-in">Como funciona</span>
+      <h2 class="section-h2 fade-in">Simples como deve ser</h2>
+      <p class="section-p fade-in">Anunciar é gratuito e leva menos de dois minutos.</p>
+
+      <div class="hiw-grid">
+        <div class="hiw-item fade-in">
+          <p class="hiw-n">01</p>
+          <h3>Preencha o formulário</h3>
+          <p>Informe nome, categoria, endereço, telefone e uma descrição do seu negócio.</p>
+        </div>
+        <div class="hiw-item fade-in">
+          <p class="hiw-n">02</p>
+          <h3>Análise e publicação</h3>
+          <p>Seu anúncio é revisado e publicado em até 24 horas, visível para toda a comunidade.</p>
+        </div>
+        <div class="hiw-item fade-in">
+          <p class="hiw-n">03</p>
+          <h3>Receba clientes</h3>
+          <p>Moradores encontram seu negócio, entram em contato e deixam avaliações.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADVERTISE ───────────────────────────────────────────── -->
+  <section id="advertise" class="page">
+    <div class="container">
+      <div class="adv-inner">
+
+        <!-- Esquerda: copy -->
+        <div class="adv-left fade-in">
+          <span class="section-label">Anunciar</span>
+          <h2 class="section-h2" id="advertise-heading">
+            Conecte seu negócio com o bairro
+          </h2>
+          <p class="section-p" style="margin-bottom:0">
+            Cadastro gratuito, sem mensalidade, sem comissão. Seu estabelecimento listado em minutos.
+          </p>
+
+          <div class="adv-perks">
+            <div class="adv-perk">
+              <div class="adv-perk-icon">
+                <!-- location icon -->
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                  <circle cx="12" cy="9" r="2.5" />
+                </svg>
+              </div>
+              <div>
+                <strong>Visibilidade local</strong>
+                <span>Apareça para quem busca na sua categoria e região.</span>
+              </div>
+            </div>
+            <div class="adv-perk">
+              <div class="adv-perk-icon">
+                <!-- star icon -->
+                <svg viewBox="0 0 24 24">
+                  <polygon
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              </div>
+              <div>
+                <strong>Avaliações da comunidade</strong>
+                <span>Seus clientes recomendam e avaliam seu serviço.</span>
+              </div>
+            </div>
+            <div class="adv-perk">
+              <div class="adv-perk-icon">
+                <!-- phone icon -->
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z" />
+                </svg>
+              </div>
+              <div>
+                <strong>Contato direto</strong>
+                <span>Um clique para ligar ou enviar mensagem no WhatsApp.</span>
+              </div>
+            </div>
+            <div class="adv-perk">
+              <div class="adv-perk-icon">
+                <!-- free / circle icon -->
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </div>
+              <div>
+                <strong>Totalmente gratuito</strong>
+                <span>Sem taxas, sem comissões, sem surpresas.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Direita: formulário -->
+        <div class="fade-in">
+          <div class="adv-form-wrap">
+            <div class="adv-form-head">Publicar anúncio ou cadastrar negócio</div>
+            <div class="adv-form-body">
+
+              <form id="advertise-form" novalidate>
+                <div class="f-grid">
+
+                  <div class="f-field f-col2">
+                    <label class="f-label">Tipo de anúncio *</label>
+                    <div class="f-type-options" role="radiogroup">
+                      <label class="f-type-pill">
+                        <input type="radio" name="post_type" value="business" checked>
+                        <span>Estabelecimento comercial</span>
+                      </label>
+                      <label class="f-type-pill">
+                        <input type="radio" name="post_type" value="offer">
+                        <span class="f-pill-badge">Ofereço</span>
+                        <span>Venda ou serviço no bairro</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="f-field f-col2">
+                    <label class="f-label" for="f-name" id="f-name-label">Título ou Nome *</label>
+                    <input class="f-input" id="f-name" name="name" type="text" required
+                      placeholder="Ex: Padaria Boa Vida ou Vendo Bolo Caseiro">
+                    <span class="f-err" data-error="name"></span>
+                  </div>
+
+                  <div class="f-field" id="f-price-group" style="display:none">
+                    <label class="f-label" for="f-price">Preço / Valor</label>
+                    <input class="f-input" id="f-price" name="price" type="text"
+                      placeholder="Ex: R$ 35,00 ou A combinar">
+                  </div>
+
+                  <div class="f-field">
+                    <label class="f-label" for="f-category">Categoria *</label>
+                    <select class="f-input" id="f-category" name="category" required>
+                      <option value="">Selecione</option>
+                      <option>Alimentação</option>
+                      <option>Beleza</option>
+                      <option>Saúde</option>
+                      <option>Tecnologia</option>
+                      <option>Moda</option>
+                      <option>Educação</option>
+                      <option>Pets</option>
+                      <option>Lazer</option>
+                      <option>Mercado</option>
+                      <option>Serviços</option>
+                      <option>Outro</option>
+                    </select>
+                    <span class="f-err" data-error="category"></span>
+                  </div>
+
+                  <div class="f-field">
+                    <label class="f-label" for="f-phone">Telefone / WhatsApp *</label>
+                    <input class="f-input" id="f-phone" name="phone" type="tel" required placeholder="(11) 99999-9999">
+                    <span class="f-err" data-error="phone"></span>
+                  </div>
+
+                  <div class="f-field f-col2">
+                    <label class="f-label" for="f-address">Endereço ou Local de Retirada *</label>
+                    <input class="f-input" id="f-address" name="address" type="text" required
+                      placeholder="Rua, número, bairro ou referência de retirada">
+                    <span class="f-err" data-error="address"></span>
+                  </div>
+
+                  <div class="f-field f-col2">
+                    <label class="f-label" for="f-hours" id="f-hours-label">Horário de funcionamento / atendimento
+                      *</label>
+                    <input class="f-input" id="f-hours" name="hours" type="text" required
+                      placeholder="Ex: Seg–Sex 9h–18h ou A combinar">
+                    <span class="f-err" data-error="hours"></span>
+                  </div>
+
+                  <div class="f-field f-col2">
+                    <label class="f-label" for="f-desc">Descrição *</label>
+                    <textarea class="f-input" id="f-desc" name="desc" required
+                      placeholder="Descreva o que está vendendo ou oferecendo no bairro, detalhes e diferenciais."></textarea>
+                    <span class="f-err" data-error="desc"></span>
+                  </div>
+
+                  <div class="f-field">
+                    <label class="f-label" for="f-email">E-mail *</label>
+                    <input class="f-input" id="f-email" name="email" type="email" required
+                      placeholder="email@exemplo.com">
+                    <span class="f-err" data-error="email"></span>
+                  </div>
+
+                  <div class="f-field">
+                    <label class="f-label" for="f-instagram">Instagram</label>
+                    <input class="f-input" id="f-instagram" name="instagram" type="text" placeholder="@seunegocio">
+                  </div>
+
+                  <div class="f-field f-col2 f-submit">
+                    <button type="submit" class="btn btn-white btn-lg" id="submit-btn"
+                      style="width:100%;justify-content:center">
+                      Enviar gratuitamente
+                    </button>
+                  </div>
+
+                </div>
+              </form>
+
+              <div class="form-success" id="form-success">
+                <div class="fs-check">✓</div>
+                <h3>Anúncio enviado</h3>
+                <p>Seu estabelecimento será publicado em até 24 horas.</p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER ──────────────────────────────────────────────── -->
+  <footer id="footer">
+    <div class="container">
+      <div class="footer-grid">
+
+        <div class="footer-brand">
+          <a href="#hero" class="nav-logo">Guia de Bairro</a>
+          <p>O diretório de comércios e serviços do seu bairro.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Produto</h4>
+          <ul>
+            <li><a href="#listings">Negócios</a></li>
+            <li><a href="#how-it-works">Como funciona</a></li>
+            <li><a href="#advertise">Anunciar</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Anunciar</h4>
+          <ul>
+            <li><a href="#advertise">Cadastrar negócio</a></li>
+            <li><a href="#advertise">Planos</a></li>
+            <li><a href="#advertise">Suporte</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Empresa</h4>
+          <ul>
+            <li><a href="#">Sobre</a></li>
+            <li><a href="#">Termos</a></li>
+            <li><a href="#">Privacidade</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 Guia de Bairro</p>
+        <div class="footer-socials">
+          <a href="#" aria-label="Instagram">IG</a>
+          <a href="#" aria-label="Facebook">FB</a>
+          <a href="#" aria-label="WhatsApp">WA</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL ───────────────────────────────────────────────── -->
+  <div id="modal-overlay" role="dialog" aria-modal="true" aria-label="Detalhes do estabelecimento">
+    <div class="modal"></div>
+  </div>
+
+  <!-- TOAST ───────────────────────────────────────────────── -->
+  <div id="toast-container" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

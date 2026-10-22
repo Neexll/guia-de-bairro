@@ -14,25 +14,20 @@
 
 <body>
 
+  <!-- TOP BANNER (estilo America.gov) ───────────────────── -->
+  <div class="top-banner">
+    <span>Comércio local</span>
+  </div>
+
   <!-- NAV ─────────────────────────────────────────────────── -->
   <nav id="navbar">
-    <div class="container nav-inner">
+    <div class="nav-inner">
 
       <a href="#hero" class="nav-logo" id="nav-logo">Guia de Bairro</a>
 
-      <ul class="nav-links">
-        <li><a href="#hero" data-page="hero">Início</a></li>
-        <li><a href="#listings" data-page="listings">Negócios</a></li>
-        <li><a href="#how-it-works" data-page="how-it-works">Como funciona</a></li>
-        <li><a href="#advertise" data-page="advertise">Anunciar</a></li>
-      </ul>
-
       <div class="nav-actions">
-        <button id="theme-toggle" aria-label="Alternar tema">Tema</button>
-        <a href="#advertise" class="btn btn-white btn-sm" id="nav-cta">Anuncie grátis</a>
-        <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
-          <span></span><span></span><span></span>
-        </button>
+        <button class="nav-menu-btn" id="nav-hamburger" aria-label="Abrir menu" aria-haspopup="dialog"
+          aria-controls="mobile-nav">Menu</button>
       </div>
 
     </div>
@@ -56,20 +51,30 @@
 
   <!-- MOBILE NAV ──────────────────────────────────────────── -->
   <div id="mobile-nav-overlay"></div>
-  <nav id="mobile-nav">
-    <a href="#hero" class="mobile-nav-link" data-page="hero">Início</a>
-    <a href="#listings" class="mobile-nav-link" data-page="listings">Negócios</a>
-    <a href="#how-it-works" class="mobile-nav-link" data-page="how-it-works">Como funciona</a>
-    <a href="#advertise" class="mobile-nav-link" data-page="advertise">Anunciar</a>
-    <div style="margin-top:20px">
-      <a href="#advertise" class="btn btn-white" style="width:100%;justify-content:center">Anuncie grátis</a>
+  <nav id="mobile-nav" role="dialog" aria-modal="true" aria-label="Menu principal">
+    <button class="menu-close" id="menu-close" aria-label="Fechar menu">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" aria-hidden="true">
+        <path d="M18 6 6 18M6 6l12 12" />
+      </svg>
+    </button>
+    <div class="menu-links">
+      <a href="#hero" class="mobile-nav-link" data-page="hero">Início</a>
+      <a href="#listings" class="mobile-nav-link" data-page="listings">Negócios</a>
+      <a href="#how-it-works" class="mobile-nav-link" data-page="how-it-works">Como funciona</a>
+      <a href="#advertise" class="mobile-nav-link" data-page="advertise" id="nav-cta">Anunciar grátis</a>
+      <a href="#dashboard" class="mobile-nav-link" data-page="dashboard" id="menu-dashboard" hidden>Minha conta</a>
+      <button type="button" class="mobile-nav-link" id="menu-auth">Entrar / Cadastrar</button>
+    </div>
+    <div class="menu-foot">
+      <span id="menu-user" class="menu-user" hidden></span>
+      <button id="theme-toggle" aria-label="Alternar tema">Alternar tema</button>
+      <span>Guia de Bairro · comércio local</span>
     </div>
   </nav>
 
   <!-- HERO ────────────────────────────────────────────────── -->
   <section id="hero" class="page">
-
-    <p class="hero-label fade-in">Comércio local</p>
 
     <h1 class="hero-h1 fade-in">
       Descubra o melhor<br>
@@ -83,7 +88,7 @@
 
     <div class="hero-search fade-in" role="search">
       <span class="hero-search-ico" aria-hidden="true">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8" />
           <path d="m21 21-4.35-4.35" />
@@ -91,7 +96,7 @@
       </span>
       <input id="hero-search-input" type="search" placeholder="Busque por restaurante, salão, farmácia..."
         autocomplete="off" aria-label="Buscar negócios">
-      <button class="btn btn-white btn-sm" id="hero-search-btn">Buscar</button>
+      <button class="btn btn-white" id="hero-search-btn">Buscar</button>
     </div>
 
     <div class="hero-ctas fade-in">
@@ -198,10 +203,38 @@
   <!-- LISTINGS (Negócios & Categorias integradas) ───────── -->
   <section id="listings" class="page">
     <div class="container">
-      <span class="section-label fade-in">Estabelecimentos</span>
-      <h2 class="section-h2 fade-in">Negócios do bairro</h2>
-      <p class="section-p fade-in">Navegue pelas categorias ou filtre para encontrar estabelecimentos e ofertas perto de
-        você.</p>
+      <span class="section-label fade-in">Comunidade & Comércio</span>
+      <h2 class="section-h2 fade-in">O que tem no bairro</h2>
+      <p class="section-p fade-in">Navegue pelas ofertas dos negócios locais ou veja o que os moradores estão procurando comprar ou contratar.</p>
+
+      <!-- Alternador de modo: Negócios vs Procuras -->
+      <div class="listings-mode-tabs fade-in">
+        <button type="button" class="mode-tab active" id="tab-listings-biz">🏢 Negócios & Ofertas</button>
+        <button type="button" class="mode-tab" id="tab-listings-proc">🙋 Procuras dos Moradores</button>
+        <button type="button" class="btn btn-white btn-sm" id="btn-open-procura-listings" style="margin-left:auto">+ Quero procurar algo</button>
+      </div>
+
+      <!-- Localização em tempo real -->
+      <div class="geo-bar" id="geo-bar">
+        <button type="button" class="geo-btn" id="geo-btn" aria-pressed="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+            <circle cx="12" cy="12" r="8" />
+          </svg>
+          <span id="geo-btn-label">Usar minha localização</span>
+        </button>
+        <span class="geo-status" id="geo-status" aria-live="polite" hidden>
+          <span class="geo-live-dot" aria-hidden="true"></span>
+          <span id="geo-status-text"></span>
+        </span>
+        <label class="geo-only" id="geo-only-wrap" hidden>
+          <input type="checkbox" id="geo-only">
+          <span>Só perto de mim</span>
+        </label>
+        <p class="geo-note">Sua posição fica só neste navegador e não é salva. O endereço é consultado no OpenStreetMap.</p>
+      </div>
 
       <!-- Categorias integradas aos Negócios -->
       <div id="categories-grid" class="cat-pills fade-in" role="list" aria-label="Categorias"
@@ -237,6 +270,7 @@
       </div>
 
       <div id="listings-grid" class="cards-grid" role="list" aria-label="Negócios"></div>
+      <div id="procuras-grid" class="cards-grid" role="list" aria-label="Procuras no bairro" style="display:none"></div>
     </div>
   </section>
 
@@ -342,38 +376,18 @@
         <!-- Direita: formulário -->
         <div class="fade-in">
           <div class="adv-form-wrap">
-            <div class="adv-form-head">Publicar anúncio ou cadastrar negócio</div>
-            <div class="adv-form-body">
+            <div class="adv-form-head">Publicar anúncio no bairro</div>
 
+            <div id="adv-auth-alert" class="adv-auth-alert" hidden></div>
+
+            <div class="adv-form-body" id="advertise-form-wrap">
               <form id="advertise-form" novalidate>
                 <div class="f-grid">
 
                   <div class="f-field f-col2">
-                    <label class="f-label">Tipo de anúncio *</label>
-                    <div class="f-type-options" role="radiogroup">
-                      <label class="f-type-pill">
-                        <input type="radio" name="post_type" value="business" checked>
-                        <span>Estabelecimento comercial</span>
-                      </label>
-                      <label class="f-type-pill">
-                        <input type="radio" name="post_type" value="offer">
-                        <span class="f-pill-badge">Ofereço</span>
-                        <span>Venda ou serviço no bairro</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div class="f-field f-col2">
-                    <label class="f-label" for="f-name" id="f-name-label">Título ou Nome *</label>
+                    <label class="f-label" for="f-name">Título do negócio ou serviço *</label>
                     <input class="f-input" id="f-name" name="name" type="text" required
-                      placeholder="Ex: Padaria Boa Vida ou Vendo Bolo Caseiro">
-                    <span class="f-err" data-error="name"></span>
-                  </div>
-
-                  <div class="f-field" id="f-price-group" style="display:none">
-                    <label class="f-label" for="f-price">Preço / Valor</label>
-                    <input class="f-input" id="f-price" name="price" type="text"
-                      placeholder="Ex: R$ 35,00 ou A combinar">
+                      placeholder="Ex: Padaria Central, Reformas do Zé, Aulas de Inglês">
                   </div>
 
                   <div class="f-field">
@@ -392,70 +406,87 @@
                       <option>Serviços</option>
                       <option>Outro</option>
                     </select>
-                    <span class="f-err" data-error="category"></span>
                   </div>
 
                   <div class="f-field">
-                    <label class="f-label" for="f-phone">Telefone / WhatsApp *</label>
-                    <input class="f-input" id="f-phone" name="phone" type="tel" required placeholder="(11) 99999-9999">
-                    <span class="f-err" data-error="phone"></span>
+                    <label class="f-label" for="f-price">Valor (obrigatório) *</label>
+                    <input class="f-input" id="f-price" name="price" type="text" required
+                      placeholder="Ex: A partir de R$ 45,00">
+                    <span class="f-hint">No formato "a partir de R$ X"</span>
                   </div>
 
+                  <!-- Pergunta do CEP do Anúncio -->
+                  <div class="f-field f-col2 f-cep-highlight">
+                    <label class="f-label">Em qual CEP você quer cadastrar o anúncio? *</label>
+                    <div class="auth-row" style="margin-top:6px">
+                      <select class="f-input" id="f-adv-pais"></select>
+                      <input class="f-input" id="f-adv-cep" type="text" placeholder="CEP do anúncio">
+                    </div>
+                    <p id="f-adv-cep-status" class="auth-cep-status"></p>
+                    <span class="f-hint">Você pode escolher um CEP diferente do seu cadastro se o serviço/loja for em outro local.</span>
+                  </div>
+
+                  <!-- Upload de fotos -->
                   <div class="f-field f-col2">
-                    <label class="f-label" for="f-address">Endereço ou Local de Retirada *</label>
-                    <input class="f-input" id="f-address" name="address" type="text" required
-                      placeholder="Rua, número, bairro ou referência de retirada">
-                    <span class="f-err" data-error="address"></span>
+                    <label class="f-label">Fotos do anúncio (uma ou mais)</label>
+                    <input type="file" id="f-fotos" accept="image/jpeg,image/png,image/webp" multiple class="f-input" style="padding:8px">
+                    <div id="f-fotos-preview" class="fotos-preview-grid"></div>
+                    <span class="f-hint">Formatos: JPG, PNG, WebP (máx. 5MB cada).</span>
                   </div>
 
+                  <!-- Link de vídeo -->
                   <div class="f-field f-col2">
-                    <label class="f-label" for="f-hours" id="f-hours-label">Horário de funcionamento / atendimento
-                      *</label>
-                    <input class="f-input" id="f-hours" name="hours" type="text" required
-                      placeholder="Ex: Seg–Sex 9h–18h ou A combinar">
-                    <span class="f-err" data-error="hours"></span>
+                    <label class="f-label" for="f-video">Vídeo (link)</label>
+                    <input class="f-input" id="f-video" type="url" placeholder="https://youtube.com/watch?v=... ou link do Instagram Reel">
+                    <span class="f-hint">Cole o link do seu vídeo no YouTube, Instagram ou TikTok.</span>
                   </div>
 
-                  <div class="f-field f-col2">
-                    <label class="f-label" for="f-desc">Descrição *</label>
-                    <textarea class="f-input" id="f-desc" name="desc" required
-                      placeholder="Descreva o que está vendendo ou oferecendo no bairro, detalhes e diferenciais."></textarea>
-                    <span class="f-err" data-error="desc"></span>
-                  </div>
-
-                  <div class="f-field">
-                    <label class="f-label" for="f-email">E-mail *</label>
-                    <input class="f-input" id="f-email" name="email" type="email" required
-                      placeholder="email@exemplo.com">
-                    <span class="f-err" data-error="email"></span>
-                  </div>
-
+                  <!-- Redes e contato -->
                   <div class="f-field">
                     <label class="f-label" for="f-instagram">Instagram</label>
-                    <input class="f-input" id="f-instagram" name="instagram" type="text" placeholder="@seunegocio">
+                    <input class="f-input" id="f-instagram" type="text" placeholder="@seunegocio">
                   </div>
+
+                  <div class="f-field">
+                    <label class="f-label" for="f-adv-whatsapp">WhatsApp para contato</label>
+                    <input class="f-input" id="f-adv-whatsapp" type="tel" placeholder="(11) 90000-0000">
+                  </div>
+
+                  <div class="f-field f-col2">
+                    <label class="f-label" for="f-outras-redes">Outras redes ou website</label>
+                    <input class="f-input" id="f-outras-redes" type="text" placeholder="Ex: facebook.com/loja ou www.meusite.com.br">
+                  </div>
+
+                  <!-- Descrição / Texto -->
+                  <div class="f-field f-col2">
+                    <label class="f-label" for="f-desc">Descrição / Texto do anúncio *</label>
+                    <textarea class="f-input" id="f-desc" name="desc" required rows="4"
+                      placeholder="Descreva detalhadamente o produto, serviço, diferenciais, formas de atendimento e entrega."></textarea>
+                  </div>
+
+                  <div id="adv-form-error" class="auth-error f-col2"></div>
 
                   <div class="f-field f-col2 f-submit">
                     <button type="submit" class="btn btn-white btn-lg" id="submit-btn"
                       style="width:100%;justify-content:center">
-                      Enviar gratuitamente
+                      Publicar anúncio
                     </button>
                   </div>
 
                 </div>
               </form>
-
-              <div class="form-success" id="form-success">
-                <div class="fs-check">✓</div>
-                <h3>Anúncio enviado</h3>
-                <p>Seu estabelecimento será publicado em até 24 horas.</p>
-              </div>
-
             </div>
           </div>
         </div>
 
       </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD (Minha Conta) ──────────────────────────── -->
+  <section id="dashboard" class="page">
+    <div class="container dash-wrap">
+      <div style="text-align:center;padding:80px 20px;color:var(--t2)">Carregando painel...</div>
     </div>
   </section>
 
@@ -517,7 +548,122 @@
   <!-- TOAST ───────────────────────────────────────────────── -->
   <div id="toast-container" role="status" aria-live="polite"></div>
 
+  <!-- AUTH MODAL -->
+  <div id="auth-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-title" data-mode="login">
+    <div class="auth-card">
+      <button class="menu-close auth-close" id="auth-close" type="button" aria-label="Fechar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </button>
+
+      <h2 id="auth-title" class="auth-title">Entrar</h2>
+
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab active" data-mode="login">Já tenho conta</button>
+        <button type="button" class="auth-tab" data-mode="signup">Criar conta</button>
+      </div>
+
+      <form id="auth-form" novalidate>
+        <fieldset class="auth-only-signup auth-types">
+          <legend>Tipo de conta</legend>
+          <label class="auth-type">
+            <input type="radio" name="auth-tipo" value="morador" checked>
+            <span><strong>Morador</strong><small>Busco produtos e serviços</small></span>
+          </label>
+          <label class="auth-type">
+            <input type="radio" name="auth-tipo" value="anunciante">
+            <span><strong>Anunciante</strong><small>Quero divulgar meu negócio</small></span>
+          </label>
+        </fieldset>
+
+        <label class="auth-field auth-only-signup">Nome
+          <input id="auth-nome" type="text" autocomplete="name" maxlength="80">
+        </label>
+
+        <label class="auth-field">E-mail
+          <input id="auth-email" type="email" autocomplete="email" required>
+        </label>
+
+        <label class="auth-field">Senha
+          <input id="auth-password" type="password" autocomplete="current-password" minlength="8" required>
+        </label>
+
+        <div class="auth-only-signup">
+          <div class="auth-row">
+            <label class="auth-field">País
+              <select id="auth-pais"></select>
+            </label>
+            <label class="auth-field">CEP / código postal
+              <input id="auth-cep" type="text" autocomplete="postal-code" maxlength="12" placeholder="Ex: 01310-100">
+            </label>
+          </div>
+          <p id="auth-cep-status" class="auth-cep-status" aria-live="polite"></p>
+          <p class="auth-hint">Guardamos apenas o CEP — não pedimos seu endereço completo.</p>
+
+          <label class="auth-field">WhatsApp <em>(opcional)</em>
+            <input id="auth-whatsapp" type="tel" autocomplete="tel" placeholder="+55 11 90000-0000">
+          </label>
+          <label class="auth-check">
+            <input id="auth-consent" type="checkbox" disabled>
+            <span>Aceito receber ofertas exclusivas pelo WhatsApp.</span>
+          </label>
+        </div>
+
+        <p id="auth-error" class="auth-error" role="alert"></p>
+        <button type="submit" id="auth-submit" class="btn btn-white btn-lg auth-submit">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DE PROCURA ("Procuro X, pago até R$ Y") -->
+  <div id="procura-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="procura-title">
+    <div class="auth-card" style="max-width:520px">
+      <button class="menu-close auth-close" id="procura-close" type="button" aria-label="Fechar">&times;</button>
+      <h2 id="procura-title" class="auth-title">O que você está procurando?</h2>
+      <p style="font-size:.85rem;color:var(--t2);margin-bottom:18px">Publique sua intenção de compra ou serviço no bairro para que comércios e profissionais possam te atender.</p>
+
+      <form id="procura-form">
+        <label class="auth-field">O que você procura? *
+          <input id="f-proc-titulo" type="text" required placeholder="Ex: Procuro eletricista para conserto de tomada">
+        </label>
+
+        <label class="auth-field">Detalhes / Descrição
+          <textarea id="f-proc-desc" class="f-input" rows="3" placeholder="Detalhes específicos, urgência, medidas, etc."></textarea>
+        </label>
+
+        <label class="auth-field">Valor máximo que você se dispõe a pagar (R$) *
+          <input id="f-proc-valor" type="text" required placeholder="Ex: 150,00">
+        </label>
+
+        <div class="f-cep-highlight" style="margin:16px 0;padding:14px;border:1px solid var(--b1);border-radius:16px">
+          <label class="f-label">Em qual CEP você quer cadastrar a procura? *</label>
+          <div class="auth-row" style="margin-top:6px">
+            <select class="f-input" id="f-proc-pais"></select>
+            <input class="f-input" id="f-proc-cep" type="text" placeholder="CEP da procura">
+          </div>
+          <p id="f-proc-cep-status" class="auth-cep-status"></p>
+        </div>
+
+        <label class="auth-field">WhatsApp para os anunciantes te chamarem <em>(opcional)</em>
+          <input id="f-proc-whatsapp" type="tel" placeholder="(11) 90000-0000">
+        </label>
+
+        <button type="submit" id="f-proc-submit" class="btn btn-white btn-lg" style="width:100%;justify-content:center;margin-top:14px">
+          Publicar procura
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="cep.js"></script>
+  <script src="localizacao.js"></script>
+  <script src="anuncios.js"></script>
   <script src="app.js"></script>
+  <script src="auth.js"></script>
 </body>
 
 </html>

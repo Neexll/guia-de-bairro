@@ -326,7 +326,7 @@ const state = {
   heroSearchVisible: true
 };
 
-const PAGES = ["hero", "listings", "how-it-works", "advertise"];
+const PAGES = ["hero", "listings", "how-it-works", "advertise", "dashboard"];
 const FALLBACK_IMG = "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80";
 const cardCarouselStops = [];
 let modalCarouselStop = null;
@@ -485,6 +485,7 @@ function showPage(id) {
   window.scrollTo({ top: 0, behavior: "instant" });
   updateStickySearch();
   observeFadeIns();
+  if (id === "dashboard" && window.GBAnuncios) window.GBAnuncios.renderDashboard();
 }
 
 function navigate(id) {
@@ -559,8 +560,12 @@ function initNavbar() {
   const ham = $("#nav-hamburger");
   const mob = $("#mobile-nav");
   const ov = $("#mobile-nav-overlay");
-  ham.addEventListener("click", () => { mob.classList.add("open"); ov.classList.add("open"); });
+  ham.addEventListener("click", () => {
+    mob.classList.add("open"); ov.classList.add("open");
+  });
   ov.addEventListener("click", closeMob);
+  $("#menu-close").addEventListener("click", closeMob);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeMob(); });
   $$(".mobile-nav-link").forEach(a => a.addEventListener("click", closeMob));
 }
 function closeMob() {
@@ -631,7 +636,10 @@ function filtered() {
     return matchCat && matchQuery;
   });
 
-  if (state.sort === "featured") list.sort((a, b) => (b.featured || 0) - (a.featured || 0) || (b.rating || 0) - (a.rating || 0));
+  if (window.GBLocal) list = GBLocal.filtrar(list);
+
+  if (state.sort === "distance" && window.GBLocal && GBLocal.ativo()) GBLocal.ordenar(list);
+  else if (state.sort === "featured") list.sort((a, b) => (b.featured || 0) - (a.featured || 0) || (b.rating || 0) - (a.rating || 0));
   else if (state.sort === "recent") list.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
   else if (state.sort === "distance") list.sort((a, b) => (a.distanceMeters || 9999) - (b.distanceMeters || 9999));
   else if (state.sort === "rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
@@ -722,7 +730,7 @@ function renderListings() {
               <circle cx="12" cy="10" r="3"/>
             </svg>
           </span>
-          <span class="biz-distance-text">${b.distance || "Perto de você"}</span>
+          <span class="biz-distance-text">${(window.GBLocal && GBLocal.rotulo(b)) || b.distance || "Perto de você"}</span>
         </div>
         <div class="biz-clicks" title="${(b.views || 0).toLocaleString('pt-BR')} cliques no card">
           <span class="biz-clicks-icon" aria-hidden="true">
@@ -802,7 +810,7 @@ function openModal(b) {
         ${offerInfoHtml}
         <div class="modal-info-item">
           <span class="modal-info-label">Distância</span>
-          <span class="modal-info-val">${b.distance || "Perto de você"}</span>
+          <span class="modal-info-val">${(window.GBLocal && GBLocal.rotulo(b)) || b.distance || "Perto de você"}</span>
         </div>
         <div class="modal-info-item">
           <span class="modal-info-label">Visitas</span>
@@ -858,89 +866,7 @@ document.addEventListener("keydown", e => {
 
 /* ── Form ────────────────────────────────────────────────── */
 function initForm() {
-  const form = document.getElementById("advertise-form");
-  if (!form) return;
-
-  const priceGroup = document.getElementById("f-price-group");
-  const nameLabel = document.getElementById("f-name-label");
-  const nameInput = document.getElementById("f-name");
-  const hoursLabel = document.getElementById("f-hours-label");
-  const submitBtn = document.getElementById("submit-btn");
-  const typeRadios = form.querySelectorAll('[name="post_type"]');
-
-  function updateFormType() {
-    const isOffer = form.querySelector('[name="post_type"]:checked')?.value === "offer";
-    if (priceGroup) priceGroup.style.display = isOffer ? "flex" : "none";
-    if (nameLabel) nameLabel.textContent = isOffer ? "O que você está oferecendo / vendendo? *" : "Título ou Nome *";
-    if (nameInput) nameInput.placeholder = isOffer ? "Ex: Bolo de Pote Artesanal, Bicicleta Caloi 29..." : "Ex: Padaria Boa Vida";
-    if (hoursLabel) hoursLabel.textContent = isOffer ? "Horário para contato ou retirada *" : "Horário de funcionamento / atendimento *";
-    if (submitBtn) submitBtn.textContent = isOffer ? "Publicar oferta no bairro" : "Enviar gratuitamente";
-  }
-
-  typeRadios.forEach(r => r.addEventListener("change", updateFormType));
-
-  form.addEventListener("submit", e => {
-    e.preventDefault();
-    if (!validateForm(form)) return;
-
-    const isOffer = form.querySelector('[name="post_type"]:checked')?.value === "offer";
-    const btn = form.querySelector('[type="submit"]');
-    btn.textContent = isOffer ? "Publicando..." : "Enviando...";
-    btn.disabled = true;
-
-    setTimeout(() => {
-      const newPost = {
-        id: Date.now(),
-        isOffer: isOffer,
-        offerType: isOffer ? "Venda" : undefined,
-        price: isOffer ? (form.price?.value.trim() || "A combinar") : undefined,
-        name: form.name.value.trim(),
-        category: form.category.value.trim(),
-        desc: form.desc.value.trim(),
-        address: form.address.value.trim(),
-        phone: form.phone.value.trim(),
-        hours: form.hours.value.trim() || (isOffer ? "A combinar" : "Seg–Sex 9h–18h"),
-        rating: 5.0,
-        reviews: 1,
-        views: 1,
-        distanceMeters: 250,
-        distance: "Perto de você",
-        tags: isOffer ? ["Ofereço", "Venda no Bairro", form.category.value.trim()] : [form.category.value.trim()],
-        publishedAt: new Date().toISOString(),
-        featured: false,
-        image: isOffer
-          ? "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80"
-          : "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80"
-      };
-
-      BUSINESSES.unshift(newPost);
-      try {
-        const localList = JSON.parse(localStorage.getItem("gb-user-listings") || "[]");
-        localList.unshift(newPost);
-        localStorage.setItem("gb-user-listings", JSON.stringify(localList));
-      } catch (err) { }
-
-      initCategories();
-      renderListings();
-
-      form.style.display = "none";
-      document.getElementById("form-success").classList.add("show");
-      toast(isOffer ? "Oferta publicada com sucesso!" : "Anúncio enviado com sucesso!");
-
-      setTimeout(() => {
-        document.getElementById("form-success").classList.remove("show");
-        form.style.display = "";
-        form.reset();
-        updateFormType();
-        btn.textContent = isOffer ? "Publicar oferta no bairro" : "Enviar gratuitamente";
-        btn.disabled = false;
-        $$(".f-err", form).forEach(el => el.textContent = "");
-        $$(".error", form).forEach(el => el.classList.remove("error"));
-
-        navigate("listings");
-      }, 2500);
-    }, 1200);
-  });
+  // A submissão com banco de dados Supabase e upload de fotos é gerenciada em anuncios.js
 }
 
 function validateForm(form) {
@@ -1007,6 +933,8 @@ function initCounters() {
 }
 
 /* ── Bootstrap ───────────────────────────────────────────── */
+document.addEventListener("gb-local", () => renderListings());
+
 document.addEventListener("DOMContentLoaded", () => {
   setTheme(state.theme);
   initNavbar();

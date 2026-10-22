@@ -27,4 +27,4 @@ Por ser um projeto web estático, não requer instalação de dependências:
 2. Abra o arquivo `index.html` em qualquer navegador moderno (ou use extensões como Live Server no VS Code).
 
 ---
-Desenvolvido por [Neexll](https://github.com/Neexll).
+Desenvolvido por [Neexll](https://github.com/Neexll).  @RARETECNOLOGIA

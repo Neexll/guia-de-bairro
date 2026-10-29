@@ -528,21 +528,13 @@ function applySearch(v, { go = true } = {}) {
 
 function initStickySearch() {
   const input = $("#sticky-search-input");
+  if (!input) return;
   const submit = () => applySearch(input.value.trim());
   input.addEventListener("keydown", e => e.key === "Enter" && submit());
-  $("#sticky-search-btn").addEventListener("click", submit);
-  // Filtra ao vivo quando já estiver na página de negócios
+  $("#sticky-search-btn")?.addEventListener("click", submit);
   input.addEventListener("input", () => {
     if (state.page === "listings") applySearch(input.value.trim(), { go: false });
   });
-
-  const heroSearch = $(".hero-search");
-  if (heroSearch) {
-    new IntersectionObserver(([entry]) => {
-      state.heroSearchVisible = entry.isIntersecting;
-      updateStickySearch();
-    }, { rootMargin: "-20px 0px 0px 0px" }).observe(heroSearch);
-  }
 }
 
 /* ── Navbar ──────────────────────────────────────────────── */
@@ -755,8 +747,12 @@ function renderListings() {
 
 function initToolbar() {
   const si = $("#listings-search-input");
+  const sb = $("#listings-search-btn");
   const ss = $("#sort-select");
-  si.addEventListener("input", () => applySearch(si.value.trim(), { go: false }));
+  const submit = () => applySearch(si.value.trim(), { go: false });
+  si.addEventListener("input", submit);
+  si.addEventListener("keydown", e => e.key === "Enter" && submit());
+  sb?.addEventListener("click", submit);
   ss.addEventListener("change", () => { state.sort = ss.value; renderListings(); });
 }
 

@@ -241,6 +241,7 @@ body.sticky-search-on .sticky-search-box {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex: 1;
   width: 100%;
   max-width: 680px;
   min-height: 58px;
@@ -277,7 +278,8 @@ body.sticky-search-on .sticky-search-box {
   box-shadow: 0 0 0 4px rgba(0, 0, 0, .1), 0 20px 48px rgba(0, 0, 0, .2);
 }
 
-#sticky-search-input {
+#sticky-search-input,
+.sticky-search-box #listings-search-input {
   flex: 1;
   border: none;
   outline: none;
@@ -288,7 +290,8 @@ body.sticky-search-on .sticky-search-box {
   min-width: 0;
 }
 
-#sticky-search-input::placeholder {
+#sticky-search-input::placeholder,
+.sticky-search-box #listings-search-input::placeholder {
   color: var(--t3);
   font-size: .92rem;
 }
@@ -2578,7 +2581,8 @@ button.mobile-nav-link {
   color: var(--t1);
 }
 
-#auth-overlay {
+#auth-overlay,
+#procura-modal {
   position: fixed;
   inset: 0;
   z-index: 950;
@@ -2590,12 +2594,15 @@ button.mobile-nav-link {
   -webkit-backdrop-filter: blur(6px);
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transition: opacity .25s ease, visibility .25s;
 }
 
-#auth-overlay.open {
+#auth-overlay.open,
+#procura-modal.open {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
 .auth-card {
@@ -2613,7 +2620,8 @@ button.mobile-nav-link {
   transition: transform .35s var(--ease);
 }
 
-#auth-overlay.open .auth-card {
+#auth-overlay.open .auth-card,
+#procura-modal.open .auth-card {
   transform: none;
 }
 

@@ -369,6 +369,12 @@
               <form id="advertise-form" novalidate>
                 <div class="f-grid">
 
+                  <!-- Tipificação do Anúncio (AJUSTE 02) -->
+                  <div class="f-field f-col2" id="f-adv-origin-wrap">
+                    <label class="f-label">Tipificação do anúncio *</label>
+                    <div id="f-adv-origin-box" class="adv-origin-box"></div>
+                  </div>
+
                   <div class="f-field f-col2">
                     <label class="f-label" for="f-name">Título do negócio ou serviço *</label>
                     <input class="f-input" id="f-name" name="name" type="text" required
@@ -552,14 +558,36 @@
 
       <form id="auth-form" novalidate>
         <fieldset class="auth-only-signup auth-types">
-          <legend>Tipo de conta</legend>
+          <legend>Perfil de anunciante (marque uma opção)</legend>
           <label class="auth-type">
-            <input type="radio" name="auth-tipo" value="morador" checked>
-            <span><strong>Morador</strong><small>Busco produtos e serviços</small></span>
+            <input type="checkbox" name="auth-tipo" value="morador" checked>
+            <span class="auth-type-card">
+              <span class="auth-check-box" aria-hidden="true">✓</span>
+              <span class="auth-type-info">
+                <strong>Anunciante Morador (Pessoa Física)</strong>
+                <small>Para moradores anunciarem ou buscarem no bairro</small>
+              </span>
+            </span>
           </label>
           <label class="auth-type">
-            <input type="radio" name="auth-tipo" value="anunciante">
-            <span><strong>Anunciante</strong><small>Quero divulgar meu negócio</small></span>
+            <input type="checkbox" name="auth-tipo" value="empresa">
+            <span class="auth-type-card">
+              <span class="auth-check-box" aria-hidden="true">✓</span>
+              <span class="auth-type-info">
+                <strong>Anunciante Empresa (Pessoa Jurídica)</strong>
+                <small>Para comércios, empresas e profissionais PJ</small>
+              </span>
+            </span>
+          </label>
+          <label class="auth-type">
+            <input type="checkbox" name="auth-tipo" value="ambos">
+            <span class="auth-type-card">
+              <span class="auth-check-box" aria-hidden="true">✓</span>
+              <span class="auth-type-info">
+                <strong>Anunciante Morador e Empresa (Pessoa Física e Jurídica)</strong>
+                <small>Para anunciar tanto como Morador quanto como Empresa</small>
+              </span>
+            </span>
           </label>
         </fieldset>
 

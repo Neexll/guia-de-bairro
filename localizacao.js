@@ -273,6 +273,6 @@ window.GBLocal = (function () {
     ativo: () => watchId !== null && !!info,
     atual: () => info,
     rank, rotulo, filtrar, ordenar,
-    ativar, parar
+    ativar, parar, injetarPreencher
   };
 })();

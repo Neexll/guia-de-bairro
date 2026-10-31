@@ -486,6 +486,7 @@ function showPage(id) {
   updateStickySearch();
   observeFadeIns();
   if (id === "dashboard" && window.GBAnuncios) window.GBAnuncios.renderDashboard();
+  if (id === "advertise" && window.GBAnuncios && window.GBAnuncios.updateAdvertiseAccess) window.GBAnuncios.updateAdvertiseAccess();
 }
 
 function navigate(id) {

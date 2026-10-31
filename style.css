@@ -2670,8 +2670,8 @@ button.mobile-nav-link {
 .auth-types {
   border: none;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: 1fr;
+  gap: 8px;
   margin-bottom: 14px;
 }
 
@@ -2684,26 +2684,53 @@ button.mobile-nav-link {
 .auth-type {
   position: relative;
   cursor: pointer;
+  display: block;
 }
 
 .auth-type input {
   position: absolute;
   opacity: 0;
+  pointer-events: none;
 }
 
-.auth-type span {
+.auth-type-card {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  height: 100%;
-  padding: 12px 14px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 14px;
   border: 1.5px solid var(--b1);
-  border-radius: 16px;
+  border-radius: 14px;
+  background: var(--bg);
   transition: border-color .15s, background .15s;
 }
 
+.auth-check-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--b2);
+  background: var(--s1);
+  color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.auth-type-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
 .auth-type strong {
-  font-size: .9rem;
+  font-size: .86rem;
+  color: var(--t1);
 }
 
 .auth-type small {
@@ -2712,14 +2739,134 @@ button.mobile-nav-link {
   line-height: 1.3;
 }
 
-.auth-type input:checked+span {
+.auth-type input:checked + .auth-type-card {
   border-color: var(--t1);
   background: var(--s1);
 }
 
-.auth-type input:focus-visible+span {
+.auth-type input:checked + .auth-type-card .auth-check-box {
+  background: var(--t1);
+  border-color: var(--t1);
+  color: var(--bg);
+}
+
+.auth-type input:focus-visible + .auth-type-card {
   outline: 2px solid var(--t1);
   outline-offset: 2px;
+}
+
+/* ── Tipificação do Anúncio (AJUSTE 02) ─────────────────── */
+.adv-origin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.adv-origin-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--b1);
+  border-radius: 14px;
+  background: var(--s1);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+
+.adv-origin-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.adv-origin-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--b2);
+  background: var(--bg);
+  color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: all .15s ease;
+}
+
+.adv-origin-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.adv-origin-info strong {
+  font-size: .88rem;
+  color: var(--t1);
+}
+
+.adv-origin-info small {
+  font-size: .72rem;
+  color: var(--t2);
+  line-height: 1.3;
+}
+
+.adv-origin-option.is-checked {
+  border-color: var(--t1);
+  background: var(--s2);
+}
+
+.adv-origin-option.is-checked .adv-origin-check {
+  background: var(--t1);
+  border-color: var(--t1);
+  color: var(--bg);
+}
+
+.adv-origin-option.is-readonly {
+  cursor: default;
+}
+
+/* ── Aba Meu Perfil & Zona de Exclusão (AJUSTE 03) ──────── */
+.profile-settings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 720px;
+}
+
+.profile-danger-zone {
+  background: rgba(192, 57, 43, .08);
+  border: 1.5px solid rgba(229, 103, 90, .35);
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.profile-danger-head {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #e5675a;
+  margin-bottom: 8px;
+}
+
+.profile-danger-text {
+  font-size: .84rem;
+  color: var(--t2);
+  line-height: 1.55;
+  margin-bottom: 18px;
+}
+
+.btn-danger {
+  background: #c0392b;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, .15);
+}
+
+.btn-danger:hover {
+  background: #e74c3c;
 }
 
 .auth-field {

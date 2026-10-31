@@ -10,6 +10,43 @@ window.GBAnuncios = (function () {
   let advCepValidated = null;
   let procuraCepValidated = null;
 
+  function getPerfilTipo() {
+    if (window.GBAuth && typeof GBAuth.getPerfilTipo === "function") {
+      return GBAuth.getPerfilTipo();
+    }
+    const p = (window.GBAuth && GBAuth.profile) || {};
+    return p.perfil_tipo || (p.tipo === "anunciante" ? "empresa" : p.tipo) || "morador";
+  }
+
+  function getPerfilLabel(short = false) {
+    if (window.GBAuth && typeof GBAuth.getPerfilLabel === "function") {
+      return GBAuth.getPerfilLabel(getPerfilTipo(), short);
+    }
+    return "Anunciante";
+  }
+
+  function parsePrecoValor(rawStr) {
+    if (!rawStr) return NaN;
+    let s = String(rawStr).replace(/[^\d,\.]/g, "").trim();
+    if (!s) return NaN;
+    // Se tiver ponto e vírgula (ex: 1.500,00), remove pontos de milhar e troca vírgula por ponto
+    if (s.includes(".") && s.includes(",")) {
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else if (s.includes(",")) {
+      s = s.replace(",", ".");
+    }
+    return parseFloat(s);
+  }
+
+  function extrairOrigemAnuncio(a) {
+    if (a.tipo_anuncio) return a.tipo_anuncio;
+    if (Array.isArray(a.outras_redes)) {
+      const item = a.outras_redes.find(r => r && r.tipo === "origem" && r.valor);
+      if (item) return item.valor;
+    }
+    return "De Morador";
+  }
+
   /* ── 1. CARREGAR ANÚNCIOS DO SUPABASE ──────────────────── */
   async function carregarAnuncios() {
     if (!window.GBSupabase) return [];
@@ -28,12 +65,14 @@ window.GBAnuncios = (function () {
       const formatados = (data || []).map(a => {
         const fotos = (a.fotos && a.fotos.length) ? a.fotos : [];
         const principal = fotos[0] || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80";
+        const origem = extrairOrigemAnuncio(a);
         return {
           id: "sb-" + a.id,
           dbId: a.id,
           userId: a.user_id,
           name: a.titulo || (a.texto ? a.texto.slice(0, 40) + "..." : "Anúncio"),
           category: a.categoria || "Serviços",
+          origemAnuncio: origem,
           desc: a.texto,
           price: a.valor_a_partir !== null ? `A partir de R$ ${Number(a.valor_a_partir).toFixed(2).replace(".", ",")}` : undefined,
           address: [a.bairro, a.cidade, a.uf].filter(Boolean).join(", ") || `CEP ${a.cep}`,
@@ -51,7 +90,7 @@ window.GBAnuncios = (function () {
           reviews: 1,
           views: 1,
           distance: a.bairro ? `${a.bairro}` : "No bairro",
-          tags: ["Anúncio", a.categoria || "Serviços"],
+          tags: [origem, a.categoria || "Serviços"],
           featured: true,
           isUserPost: true,
           publishedAt: a.created_at
@@ -96,6 +135,113 @@ window.GBAnuncios = (function () {
     }
   }
 
+  /* ── TIPIFICAÇÃO DO ANÚNCIO (AJUSTE 02) ─────────────────── */
+  function renderAdvertiseOrigin() {
+    const box = $("#f-adv-origin-box");
+    if (!box) return;
+
+    if (!window.GBAuth || !GBAuth.user) {
+      box.innerHTML = `
+        <div class="adv-origin-grid">
+          <label class="adv-origin-option is-checked is-readonly">
+            <input type="checkbox" name="adv-origin" value="De Morador" checked disabled>
+            <span class="adv-origin-check" aria-hidden="true">✓</span>
+            <span class="adv-origin-info">
+              <strong>De Morador</strong>
+              <small>Pessoa Física</small>
+            </span>
+          </label>
+          <label class="adv-origin-option is-readonly">
+            <input type="checkbox" name="adv-origin" value="De Empresa" disabled>
+            <span class="adv-origin-check" aria-hidden="true">✓</span>
+            <span class="adv-origin-info">
+              <strong>De Empresa</strong>
+              <small>Pessoa Jurídica</small>
+            </span>
+          </label>
+        </div>
+        <span class="f-hint">Entre na sua conta para definir a tipificação automaticamente conforme o seu perfil.</span>
+      `;
+      return;
+    }
+
+    const pTipo = getPerfilTipo();
+
+    if (pTipo === "morador") {
+      // Anunciante Morador (Pessoa Física): já aparece "De Morador", sem opção de edição
+      box.innerHTML = `
+        <div class="adv-origin-grid">
+          <label class="adv-origin-option is-checked is-readonly">
+            <input type="checkbox" name="adv-origin" value="De Morador" checked disabled>
+            <span class="adv-origin-check" aria-hidden="true">✓</span>
+            <span class="adv-origin-info">
+              <strong>De Morador</strong>
+              <small>Anunciante Morador (Pessoa Física) — fixo conforme seu perfil</small>
+            </span>
+          </label>
+        </div>
+      `;
+    } else if (pTipo === "empresa") {
+      // Anunciante Empresa (Pessoa Jurídica): já aparece "De Empresa", sem opção de edição
+      box.innerHTML = `
+        <div class="adv-origin-grid">
+          <label class="adv-origin-option is-checked is-readonly">
+            <input type="checkbox" name="adv-origin" value="De Empresa" checked disabled>
+            <span class="adv-origin-check" aria-hidden="true">✓</span>
+            <span class="adv-origin-info">
+              <strong>De Empresa</strong>
+              <small>Anunciante Empresa (Pessoa Jurídica) — fixo conforme seu perfil</small>
+            </span>
+          </label>
+        </div>
+      `;
+    } else {
+      // Anunciante Morador e Empresa (PF e PJ): aparecem "De Morador" e "De Empresa" com opção de edição com check-boxes
+      box.innerHTML = `
+        <div class="adv-origin-grid">
+          <label class="adv-origin-option is-checked">
+            <input type="checkbox" name="adv-origin" value="De Morador" checked>
+            <span class="adv-origin-check" aria-hidden="true">✓</span>
+            <span class="adv-origin-info">
+              <strong>De Morador</strong>
+              <small>Pessoa Física</small>
+            </span>
+          </label>
+          <label class="adv-origin-option">
+            <input type="checkbox" name="adv-origin" value="De Empresa">
+            <span class="adv-origin-check" aria-hidden="true">✓</span>
+            <span class="adv-origin-info">
+              <strong>De Empresa</strong>
+              <small>Pessoa Jurídica</small>
+            </span>
+          </label>
+        </div>
+        <span class="f-hint">Seu perfil é de Morador e Empresa: selecione nos check-boxes a tipificação deste anúncio.</span>
+      `;
+
+      const checks = $$('input[name="adv-origin"]', box);
+      checks.forEach(chk => {
+        chk.addEventListener("change", () => {
+          if (!checks.some(c => c.checked)) {
+            chk.checked = true;
+          }
+          checks.forEach(c => {
+            c.closest(".adv-origin-option")?.classList.toggle("is-checked", c.checked);
+          });
+        });
+      });
+    }
+  }
+
+  function getSelectedAdvertiseOrigin() {
+    const pTipo = getPerfilTipo();
+    if (pTipo === "morador") return "De Morador";
+    if (pTipo === "empresa") return "De Empresa";
+    const checked = $$('#f-adv-origin-box input[name="adv-origin"]:checked').map(c => c.value);
+    if (!checked.length) return "De Morador";
+    return checked.join(" e ");
+  }
+
   /* ── 3. FORMULÁRIO DE ANÚNCIO (SEÇÃO #advertise) ───────── */
   function initAdvertiseForm() {
     const form = $("#advertise-form");
@@ -106,6 +252,8 @@ window.GBAnuncios = (function () {
     if (paisSel && window.GBCep) {
       paisSel.innerHTML = GBCep.COUNTRIES.map(([c, n]) => `<option value="${c}">${n}</option>`).join("");
     }
+
+    renderAdvertiseOrigin();
 
     // Input de fotos com preview
     const fileInput = $("#f-fotos");
@@ -150,12 +298,23 @@ window.GBAnuncios = (function () {
     const cepStatus = $("#f-adv-cep-status");
     async function validarAdvCep() {
       if (!cepInput || !paisSel) return null;
-      const pais = paisSel.value;
+      const pais = paisSel.value || "BR";
       const cep = cepInput.value.trim();
       if (!cep) { advCepValidated = null; if (cepStatus) cepStatus.textContent = ""; return null; }
       if (cepStatus) { cepStatus.textContent = "Validando CEP..."; cepStatus.dataset.kind = "loading"; }
       const res = await GBCep.validar(pais, cep);
       if (!res.ok) {
+        // Fallback se o CEP digitado é o mesmo já salvo no perfil do usuário
+        const p = (window.GBAuth && GBAuth.profile) || {};
+        if (p.cep && GBCep.normalizar(pais, cep) === GBCep.normalizar(p.pais || "BR", p.cep)) {
+          advCepValidated = { ok: true, pais: p.pais || "BR", cep: p.cep, cidade: p.cidade, uf: p.uf, bairro: p.bairro };
+          if (cepStatus) {
+            const loc = [p.bairro, p.cidade, p.uf].filter(Boolean).join(" · ");
+            cepStatus.textContent = "✓ " + (loc || "CEP do seu perfil");
+            cepStatus.dataset.kind = "ok";
+          }
+          return advCepValidated;
+        }
         advCepValidated = null;
         if (cepStatus) { cepStatus.textContent = res.erro; cepStatus.dataset.kind = "error"; }
         return null;
@@ -169,10 +328,13 @@ window.GBAnuncios = (function () {
       return res;
     }
 
-    if (cepInput) cepInput.addEventListener("blur", validarAdvCep);
+    if (cepInput) {
+      cepInput.addEventListener("blur", validarAdvCep);
+      cepInput.addEventListener("input", () => { advCepValidated = null; });
+    }
     if (paisSel) paisSel.addEventListener("change", () => { advCepValidated = null; validarAdvCep(); });
 
-    // Envio do Anúncio para o Supabase
+    // Envio do Anúncio para o Supabase (AJUSTE 01, 02 e 04)
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const btn = $("#submit-btn");
@@ -186,30 +348,20 @@ window.GBAnuncios = (function () {
         return;
       }
 
-      // 2. Checa tipo de conta (só anunciante)
-      if (GBAuth.profile && GBAuth.profile.tipo !== "anunciante") {
-        if (errBox) {
-          errBox.innerHTML = `Sua conta atual é de <strong>Morador</strong>. Anúncios comerciais são exclusivos para contas de Anunciante.<br>
-            <button type="button" class="btn btn-white btn-sm" id="btn-upgrade-adv" style="margin-top:8px">Mudar minha conta para Anunciante agora</button>`;
-          $("#btn-upgrade-adv")?.addEventListener("click", virarAnunciante);
-        }
-        return;
-      }
-
       const titulo = $("#f-name")?.value.trim() || "";
       const categoria = $("#f-category")?.value || "";
       const texto = $("#f-desc")?.value.trim() || "";
-      const precoRaw = $("#f-price")?.value.replace(/[^\d,\.]/g, "").replace(",", ".") || "";
-      const preco = parseFloat(precoRaw);
+      const preco = parsePrecoValor($("#f-price")?.value || "");
       const videoUrl = $("#f-video")?.value.trim() || null;
       const instagram = $("#f-instagram")?.value.trim() || null;
       const whatsappContato = $("#f-adv-whatsapp")?.value.trim() || null;
-      const outrasRedes = $("#f-outras-redes")?.value.trim() || "";
+      const outrasRedesTxt = $("#f-outras-redes")?.value.trim() || "";
+      const origemAnuncio = getSelectedAdvertiseOrigin();
 
-      if (!titulo) { msg("Informe o título do negócio ou oferta."); return; }
-      if (!categoria) { msg("Selecione uma categoria."); return; }
-      if (texto.length < 5) { msg("Informe a descrição do anúncio (mínimo 5 caracteres)."); return; }
-      if (isNaN(preco) || preco < 0) { msg("Informe o valor obrigatório (ex: a partir de R$ 35,00)."); return; }
+      if (!titulo) { msg("Informe o título do negócio ou serviço."); $("#f-name")?.focus(); return; }
+      if (!categoria) { msg("Selecione uma categoria."); $("#f-category")?.focus(); return; }
+      if (isNaN(preco) || preco < 0) { msg("Informe um valor válido (ex: 45,00)."); $("#f-price")?.focus(); return; }
+      if (texto.length < 5) { msg("Informe a descrição do anúncio (mínimo 5 caracteres)."); $("#f-desc")?.focus(); return; }
 
       const cepValido = advCepValidated || await validarAdvCep();
       if (!cepValido) {
@@ -222,6 +374,11 @@ window.GBAnuncios = (function () {
       btn.textContent = "Publicando anúncio...";
 
       try {
+        // Garante que o perfil no banco esteja sincronizado como 'anunciante' antes do insert (AJUSTE 04)
+        if (typeof GBAuth.ensureProfile === "function") {
+          await GBAuth.ensureProfile();
+        }
+
         // Upload das fotos no Supabase Storage
         const uploadedUrls = [];
         for (const file of selectedPhotos) {
@@ -237,8 +394,11 @@ window.GBAnuncios = (function () {
           }
         }
 
+        const outrasRedesArr = [{ tipo: "origem", valor: origemAnuncio }];
+        if (outrasRedesTxt) outrasRedesArr.push({ tipo: "link", valor: outrasRedesTxt });
+
         // Salva no banco de dados
-        const { error: dbErr } = await GBSupabase.from("anuncios").insert({
+        const payload = {
           user_id: GBAuth.user.id,
           titulo,
           categoria,
@@ -253,45 +413,38 @@ window.GBAnuncios = (function () {
           video_url: videoUrl,
           instagram,
           whatsapp_contato: whatsappContato,
-          outras_redes: outrasRedes ? [{ tipo: "link", valor: outrasRedes }] : []
-        });
+          outras_redes: outrasRedesArr
+        };
+
+        let { error: dbErr } = await GBSupabase.from("anuncios").insert(payload);
+
+        // Se ainda assim houve erro de RLS por conta antiga com tipo='morador', força atualização do perfil e tenta de novo
+        if (dbErr) {
+          await GBSupabase.from("profiles").update({ tipo: "anunciante" }).eq("id", GBAuth.user.id);
+          const retry = await GBSupabase.from("anuncios").insert(payload);
+          dbErr = retry.error;
+        }
 
         if (dbErr) throw dbErr;
 
         msg("Anúncio publicado com sucesso!");
         form.reset();
         selectedPhotos = [];
+        advCepValidated = null;
         renderPhotoPreviews();
+        updateAdvertiseAccess();
         await carregarAnuncios();
 
-        // Leva para a listagem ou dashboard
+        // Leva para o dashboard onde o anúncio recém-criado já aparece listado
         if (typeof navigate === "function") navigate("dashboard");
       } catch (err) {
+        if (errBox) errBox.textContent = "Erro ao publicar: " + (err.message || err);
         msg("Erro ao publicar: " + (err.message || err));
       } finally {
         btn.disabled = false;
-        btn.textContent = "Enviar anúncio";
+        btn.textContent = "Publicar anúncio";
       }
     });
-  }
-
-  /* ── 4. TRANSFORMAR MORADOR EM ANUNCIANTE ───────────────── */
-  async function virarAnunciante() {
-    if (!GBAuth.user) return;
-    try {
-      const { error } = await GBSupabase
-        .from("profiles")
-        .update({ tipo: "anunciante" })
-        .eq("id", GBAuth.user.id);
-
-      if (error) throw error;
-      if (GBAuth.profile) GBAuth.profile.tipo = "anunciante";
-      msg("Parabéns! Sua conta agora é de Anunciante.");
-      renderDashboard();
-      updateAdvertiseAccess();
-    } catch (e) {
-      msg("Erro ao atualizar conta: " + e.message);
-    }
   }
 
   /* ── 5. MODAL DE PROCURA ("Procuro X, pago até R$ Y") ──── */
@@ -308,12 +461,22 @@ window.GBAnuncios = (function () {
     const cepStatus = $("#f-proc-cep-status");
     async function validarProcCep() {
       if (!cepInput || !paisSel) return null;
-      const pais = paisSel.value;
+      const pais = paisSel.value || "BR";
       const cep = cepInput.value.trim();
       if (!cep) { procuraCepValidated = null; if (cepStatus) cepStatus.textContent = ""; return null; }
       if (cepStatus) { cepStatus.textContent = "Validando CEP..."; cepStatus.dataset.kind = "loading"; }
       const res = await GBCep.validar(pais, cep);
       if (!res.ok) {
+        const p = (window.GBAuth && GBAuth.profile) || {};
+        if (p.cep && GBCep.normalizar(pais, cep) === GBCep.normalizar(p.pais || "BR", p.cep)) {
+          procuraCepValidated = { ok: true, pais: p.pais || "BR", cep: p.cep, cidade: p.cidade, uf: p.uf, bairro: p.bairro };
+          if (cepStatus) {
+            const loc = [p.bairro, p.cidade, p.uf].filter(Boolean).join(" · ");
+            cepStatus.textContent = "✓ " + (loc || "CEP do seu perfil");
+            cepStatus.dataset.kind = "ok";
+          }
+          return procuraCepValidated;
+        }
         procuraCepValidated = null;
         if (cepStatus) { cepStatus.textContent = res.erro; cepStatus.dataset.kind = "error"; }
         return null;
@@ -327,7 +490,10 @@ window.GBAnuncios = (function () {
       return res;
     }
 
-    if (cepInput) cepInput.addEventListener("blur", validarProcCep);
+    if (cepInput) {
+      cepInput.addEventListener("blur", validarProcCep);
+      cepInput.addEventListener("input", () => { procuraCepValidated = null; });
+    }
     if (paisSel) paisSel.addEventListener("change", () => { procuraCepValidated = null; validarProcCep(); });
 
     // Fechar modal
@@ -347,8 +513,7 @@ window.GBAnuncios = (function () {
 
         const titulo = $("#f-proc-titulo")?.value.trim() || "";
         const texto = $("#f-proc-desc")?.value.trim() || "";
-        const maxRaw = $("#f-proc-valor")?.value.replace(/[^\d,\.]/g, "").replace(",", ".") || "";
-        const valorMax = parseFloat(maxRaw);
+        const valorMax = parsePrecoValor($("#f-proc-valor")?.value || "");
         const wpp = $("#f-proc-whatsapp")?.value.trim() || "";
 
         if (!titulo) { msg("Informe o que você está procurando."); return; }
@@ -362,10 +527,10 @@ window.GBAnuncios = (function () {
         btn.textContent = "Publicando...";
 
         try {
-          const { error } = await GBSupabase.from("procuras").insert({
+          const payload = {
             user_id: GBAuth.user.id,
             titulo,
-            texto: texto || titulo,
+            texto: texto.length >= 5 ? texto : (titulo.length >= 5 ? titulo : titulo + " - bairro"),
             valor_maximo: valorMax,
             pais: cepValido.pais,
             cep: cepValido.cep,
@@ -373,12 +538,23 @@ window.GBAnuncios = (function () {
             uf: cepValido.uf,
             bairro: cepValido.bairro,
             whatsapp_contato: wpp
-          });
+          };
+
+          let { error } = await GBSupabase.from("procuras").insert(payload);
+
+          // Compatibilidade com banco antigo onde policy de procuras exigia profiles.tipo = 'morador'
+          if (error) {
+            await GBSupabase.from("profiles").update({ tipo: "morador" }).eq("id", GBAuth.user.id);
+            const retry = await GBSupabase.from("procuras").insert(payload);
+            error = retry.error;
+            await GBSupabase.from("profiles").update({ tipo: "anunciante" }).eq("id", GBAuth.user.id);
+          }
 
           if (error) throw error;
           msg("Procura publicada no bairro!");
           modal.classList.remove("open");
           form.reset();
+          procuraCepValidated = null;
           renderProcurasMural();
           renderDashboard();
         } catch (ex) {
@@ -391,30 +567,22 @@ window.GBAnuncios = (function () {
     }
   }
 
-  function isAnunciante() {
-    if (!GBAuth.user) return false;
-    const tipo = (GBAuth.profile && GBAuth.profile.tipo) || (GBAuth.user.user_metadata && GBAuth.user.user_metadata.tipo);
-    return tipo === "anunciante";
-  }
-
   function openProcuraModal() {
-    if (isAnunciante()) {
-      msg("Você está conectado como Anunciante. Esta funcionalidade é exclusiva para Moradores. Como anunciante, você pode conferir as procuras na sua aba 'Oportunidades' para enviar propostas aos clientes!");
-      return;
-    }
     if (!GBAuth.user) {
-      msg("Faça login como Morador para publicar o que você procura no bairro.");
+      msg("Faça login ou crie sua conta para publicar o que você procura no bairro.");
       GBAuth.open("login");
       return;
     }
     const modal = $("#procura-modal");
     if (!modal) return;
-    // Pré-preenche CEP com o do perfil se houver
     if (GBAuth.profile) {
       const cepInput = $("#f-proc-cep");
       const paisSel = $("#f-proc-pais");
-      if (cepInput && !cepInput.value) cepInput.value = GBAuth.profile.cep || "";
-      if (paisSel && GBAuth.profile.pais) paisSel.value = GBAuth.profile.pais;
+      if (cepInput && !cepInput.value) {
+        cepInput.value = GBAuth.profile.cep || "";
+        if (paisSel && GBAuth.profile.pais) paisSel.value = GBAuth.profile.pais;
+        cepInput.dispatchEvent(new Event("blur"));
+      }
     }
     modal.classList.add("open");
   }
@@ -430,15 +598,14 @@ window.GBAnuncios = (function () {
       procuras = GBLocal.ordenar(GBLocal.filtrar(procuras));
     }
     if (!procuras.length) {
-      const isAdv = isAnunciante();
       container.innerHTML = `
         <div style="grid-column:1/-1;text-align:center;padding:50px 20px;border:1px dashed var(--b1);border-radius:20px;color:var(--t2)">
           <p style="font-size:1.1rem;color:var(--t1);margin-bottom:8px">Nenhum morador publicou uma procura recente no bairro.</p>
-          <p style="font-size:.85rem;margin-bottom:20px">${isAdv ? 'Quando os moradores publicarem pedidos de produtos ou serviços, você verá aqui para fazer propostas!' : 'Está precisando de algum produto, serviço ou reparo? Diga o que procura e quanto pode pagar!'}</p>
-          ${!isAdv ? `<button type="button" class="btn btn-white btn-sm" id="btn-empty-procura">+ Publicar o que você procura</button>` : ''}
+          <p style="font-size:.85rem;margin-bottom:20px">Está precisando de algum produto, serviço ou reparo? Diga o que procura e quanto pode pagar!</p>
+          <button type="button" class="btn btn-white btn-lg" id="btn-empty-procura">Publicar o que você procura</button>
         </div>
       `;
-      if (!isAdv) $("#btn-empty-procura")?.addEventListener("click", openProcuraModal);
+      $("#btn-empty-procura")?.addEventListener("click", openProcuraModal);
       return;
     }
 
@@ -466,8 +633,8 @@ window.GBAnuncios = (function () {
     }).join("");
   }
 
-  /* ── 7. DASHBOARD DO USUÁRIO (#dashboard) ──────────────── */
-  async function renderDashboard() {
+  /* ── 7. DASHBOARD DO USUÁRIO E GERENCIAMENTO DE PERFIL (AJUSTE 03) ── */
+  async function renderDashboard(initialTab) {
     const dash = $("#dashboard");
     if (!dash) return;
 
@@ -475,7 +642,7 @@ window.GBAnuncios = (function () {
       dash.innerHTML = `
         <div class="container" style="text-align:center;padding:100px 20px;">
           <h2 style="margin-bottom:12px;font-size:1.8rem">Você não está conectado</h2>
-          <p style="color:var(--t2);margin-bottom:24px">Faça login para ver sua conta, seus anúncios ou suas procuras.</p>
+          <p style="color:var(--t2);margin-bottom:24px">Faça login para ver sua conta, editar seu perfil, gerenciar seus anúncios ou suas procuras.</p>
           <button type="button" class="btn btn-white btn-lg" onclick="GBAuth.open('login')">Entrar na minha conta</button>
         </div>
       `;
@@ -483,7 +650,9 @@ window.GBAnuncios = (function () {
     }
 
     const p = GBAuth.profile || {};
-    const isAnunciante = p.tipo === "anunciante";
+    const pTipo = getPerfilTipo();
+    const badgeLabel = getPerfilLabel(false);
+    const activeTab = initialTab || "meus-anuncios";
 
     dash.innerHTML = `
       <div class="container dash-wrap">
@@ -493,32 +662,23 @@ window.GBAnuncios = (function () {
             <div>
               <h2 class="dash-name">${p.nome || GBAuth.user.email}</h2>
               <div class="dash-badges">
-                <span class="dash-badge ${isAnunciante ? 'badge-adv' : 'badge-user'}">${isAnunciante ? '🏪 Anunciante' : '🏠 Morador'}</span>
+                <span class="dash-badge badge-adv">🏪 ${badgeLabel}</span>
                 <span class="dash-sub">${p.cidade ? `${p.bairro ? p.bairro + ' · ' : ''}${p.cidade}` : `CEP ${p.cep || ''}`}</span>
               </div>
             </div>
           </div>
 
-          ${!isAnunciante ? `
-            <div class="dash-upgrade-box">
-              <div>
-                <strong>Quer anunciar seu negócio?</strong>
-                <p>Mude sua conta para Anunciante e publique seus serviços gratuitamente.</p>
-              </div>
-              <button type="button" class="btn btn-white btn-sm" id="btn-dash-upgrade">Virar Anunciante</button>
-            </div>
-          ` : `
-            <a href="#advertise" class="btn btn-white btn-sm">+ Novo Anúncio</a>
-          `}
+          <div class="dash-head-actions" style="display:flex;gap:10px;flex-wrap:wrap">
+            <button type="button" class="btn btn-ghost btn-lg" id="btn-dash-goto-profile">👤 Ver / Editar Perfil</button>
+            <a href="#advertise" class="btn btn-white btn-lg">Novo Anúncio</a>
+          </div>
         </div>
 
         <div class="dash-tabs" role="tablist">
-          ${isAnunciante ? `
-            <button type="button" class="dash-tab active" data-tab="meus-anuncios">Meus Anúncios</button>
-            <button type="button" class="dash-tab" data-tab="oportunidades">💡 Oportunidades no Bairro</button>
-          ` : `
-            <button type="button" class="dash-tab active" data-tab="minhas-procuras">Minhas Procuras</button>
-          `}
+          <button type="button" class="dash-tab ${activeTab === 'meus-anuncios' ? 'active' : ''}" data-tab="meus-anuncios">Meus Anúncios</button>
+          <button type="button" class="dash-tab ${activeTab === 'minhas-procuras' ? 'active' : ''}" data-tab="minhas-procuras">Minhas Procuras</button>
+          <button type="button" class="dash-tab ${activeTab === 'oportunidades' ? 'active' : ''}" data-tab="oportunidades">💡 Oportunidades no Bairro</button>
+          <button type="button" class="dash-tab ${activeTab === 'meu-perfil' ? 'active' : ''}" data-tab="meu-perfil">👤 Meu Perfil & Conta</button>
         </div>
 
         <div id="dash-tab-content" class="dash-content">
@@ -527,7 +687,11 @@ window.GBAnuncios = (function () {
       </div>
     `;
 
-    $("#btn-dash-upgrade")?.addEventListener("click", virarAnunciante);
+    // Botão de atalho no topo do dashboard para ir direto à aba de perfil
+    $("#btn-dash-goto-profile")?.addEventListener("click", () => {
+      $$(".dash-tab", dash).forEach(b => b.classList.toggle("active", b.dataset.tab === "meu-perfil"));
+      renderDashTab("meu-perfil");
+    });
 
     // Eventos de abas do dashboard
     $$(".dash-tab", dash).forEach(t => {
@@ -538,7 +702,7 @@ window.GBAnuncios = (function () {
       });
     });
 
-    renderDashTab(isAnunciante ? "meus-anuncios" : "minhas-procuras");
+    renderDashTab(activeTab);
   }
 
   async function renderDashTab(tab) {
@@ -557,21 +721,25 @@ window.GBAnuncios = (function () {
         box.innerHTML = `
           <div class="dash-empty">
             <p>Você ainda não cadastrou nenhum anúncio.</p>
-            <a href="#advertise" class="btn btn-white btn-sm" style="margin-top:12px">+ Criar meu primeiro anúncio</a>
+            <a href="#advertise" class="btn btn-white btn-lg" style="margin-top:12px">Criar meu primeiro anúncio</a>
           </div>
         `;
         return;
       }
 
       box.innerHTML = `
+        <div style="margin-bottom:16px;text-align:right">
+          <a href="#advertise" class="btn btn-white btn-lg">Criar Novo Anúncio</a>
+        </div>
         <div class="dash-grid">
           ${data.map(a => {
             const foto = (a.fotos && a.fotos[0]) || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80";
+            const origem = extrairOrigemAnuncio(a);
             return `
               <div class="dash-item-card">
                 <img src="${foto}" alt="${a.titulo}" class="dash-item-img">
                 <div class="dash-item-body">
-                  <span class="dash-item-cat">${a.categoria || 'Geral'}</span>
+                  <span class="dash-item-cat">${origem} &bull; ${a.categoria || 'Geral'}</span>
                   <h4>${a.titulo}</h4>
                   <p class="dash-item-price">A partir de R$ ${Number(a.valor_a_partir).toFixed(2).replace(".", ",")}</p>
                   <p class="dash-item-loc">📍 ${[a.bairro, a.cidade].filter(Boolean).join(", ") || a.cep}</p>
@@ -649,7 +817,7 @@ window.GBAnuncios = (function () {
         box.innerHTML = `
           <div class="dash-empty">
             <p>Você não publicou nenhuma procura ainda.</p>
-            <button type="button" class="btn btn-white btn-sm" id="btn-dash-new-proc" style="margin-top:12px">+ Publicar o que procuro</button>
+            <button type="button" class="btn btn-white btn-lg" id="btn-dash-new-proc" style="margin-top:12px">Publicar o que procuro</button>
           </div>
         `;
         $("#btn-dash-new-proc")?.addEventListener("click", openProcuraModal);
@@ -658,7 +826,7 @@ window.GBAnuncios = (function () {
 
       box.innerHTML = `
         <div style="margin-bottom:16px;text-align:right">
-          <button type="button" class="btn btn-white btn-sm" id="btn-dash-new-proc2">+ Nova Procura</button>
+          <button type="button" class="btn btn-white btn-lg" id="btn-dash-new-proc2">Nova Procura</button>
         </div>
         <div class="dash-grid">
           ${data.map(p => `
@@ -688,46 +856,317 @@ window.GBAnuncios = (function () {
         });
       });
     }
+
+    if (tab === "meu-perfil") {
+      renderProfileTab(box);
+    }
   }
 
-  /* ── 8. ATUALIZAR ACESSO À PÁGINA ANUNCIAR ───────────────── */
+  /* ── ABA MEU PERFIL & CONTA (AJUSTE 03) ────────────────── */
+  function renderProfileTab(box) {
+    const p = GBAuth.profile || {};
+    const email = (GBAuth.user && GBAuth.user.email) || "";
+    const pTipo = getPerfilTipo();
+    const paisAtual = p.pais || "BR";
+    const cepAtual = p.cep || "";
+    const wppAtual = p.whatsapp || "";
+    const consentAtual = Boolean(p.whatsapp_consent || wppAtual);
+
+    const countriesHtml = (window.GBCep ? GBCep.COUNTRIES : [["BR", "Brasil"]])
+      .map(([c, n]) => `<option value="${c}" ${c === paisAtual ? "selected" : ""}>${n}</option>`)
+      .join("");
+
+    box.innerHTML = `
+      <div class="profile-settings-grid">
+        <!-- Card de Visualização e Edição do Perfil -->
+        <div class="adv-form-wrap profile-card">
+          <div class="adv-form-head">Meus Dados e Perfil de Anunciante</div>
+          <div class="adv-form-body">
+            <form id="profile-edit-form" novalidate>
+              <div class="f-grid">
+
+                <div class="f-field f-col2">
+                  <label class="f-label">E-mail da conta</label>
+                  <input class="f-input" type="email" value="${email}" disabled style="opacity:.65;cursor:not-allowed">
+                </div>
+
+                <div class="f-field f-col2">
+                  <label class="f-label" for="prof-nome">Nome / Nome do Negócio *</label>
+                  <input class="f-input" id="prof-nome" type="text" required maxlength="80" value="${(p.nome || "").replace(/"/g, "&quot;")}">
+                </div>
+
+                <div class="f-field f-col2">
+                  <label class="f-label">Modalidade de Anunciante (escolha via check-box) *</label>
+                  <div class="auth-types profile-types" style="margin-top:6px">
+                    <label class="auth-type">
+                      <input type="checkbox" name="prof-tipo" value="morador" ${pTipo === "morador" ? "checked" : ""}>
+                      <span class="auth-type-card">
+                        <span class="auth-check-box" aria-hidden="true">✓</span>
+                        <span class="auth-type-info">
+                          <strong>Anunciante Morador (Pessoa Física)</strong>
+                          <small>Seus anúncios serão tipificados automaticamente como "De Morador"</small>
+                        </span>
+                      </span>
+                    </label>
+                    <label class="auth-type">
+                      <input type="checkbox" name="prof-tipo" value="empresa" ${pTipo === "empresa" ? "checked" : ""}>
+                      <span class="auth-type-card">
+                        <span class="auth-check-box" aria-hidden="true">✓</span>
+                        <span class="auth-type-info">
+                          <strong>Anunciante Empresa (Pessoa Jurídica)</strong>
+                          <small>Seus anúncios serão tipificados automaticamente como "De Empresa"</small>
+                        </span>
+                      </span>
+                    </label>
+                    <label class="auth-type">
+                      <input type="checkbox" name="prof-tipo" value="ambos" ${pTipo === "ambos" ? "checked" : ""}>
+                      <span class="auth-type-card">
+                        <span class="auth-check-box" aria-hidden="true">✓</span>
+                        <span class="auth-type-info">
+                          <strong>Anunciante Morador e Empresa (Pessoa Física e Jurídica)</strong>
+                          <small>Permite escolher entre "De Morador" e "De Empresa" ao cadastrar cada anúncio</small>
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="f-field f-col2 f-cep-highlight">
+                  <label class="f-label">Localização / CEP principal do seu perfil *</label>
+                  <div class="auth-row" style="margin-top:6px">
+                    <select class="f-input" id="prof-pais">${countriesHtml}</select>
+                    <input class="f-input" id="prof-cep" type="text" maxlength="12" value="${cepAtual}" placeholder="Ex: 01310-100">
+                  </div>
+                  <p id="prof-cep-status" class="auth-cep-status" data-kind="ok">${p.cidade ? `✓ ${[p.bairro, p.cidade, p.uf].filter(Boolean).join(" · ")}` : ""}</p>
+                </div>
+
+                <div class="f-field f-col2">
+                  <label class="f-label" for="prof-whatsapp">WhatsApp <em>(opcional)</em></label>
+                  <input class="f-input" id="prof-whatsapp" type="tel" value="${wppAtual}" placeholder="+55 11 90000-0000">
+                  <label class="auth-check" style="margin-top:8px">
+                    <input id="prof-consent" type="checkbox" ${consentAtual ? "checked" : ""} ${wppAtual ? "" : "disabled"}>
+                    <span>Aceito receber contatos e ofertas pelo WhatsApp.</span>
+                  </label>
+                </div>
+
+                <div class="f-field f-col2">
+                  <label class="f-label" for="prof-password">Nova senha <em>(deixe em branco para manter a atual)</em></label>
+                  <input class="f-input" id="prof-password" type="password" minlength="8" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
+                </div>
+
+                <div id="prof-form-error" class="auth-error f-col2"></div>
+
+                <div class="f-field f-col2">
+                  <button type="submit" class="btn btn-white btn-lg" id="prof-save-btn" style="width:100%;justify-content:center">
+                    Salvar alterações do perfil
+                  </button>
+                </div>
+
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Card de Exclusão de Perfil / Conta -->
+        <div class="profile-danger-zone">
+          <div class="profile-danger-head">Excluir Perfil e Conta</div>
+          <p class="profile-danger-text">
+            Ao excluir sua conta, seu perfil de usuário, todos os seus anúncios publicados e suas procuras serão removidos permanentemente da plataforma. Esta ação não pode ser desfeita.
+          </p>
+          <button type="button" class="btn btn-danger btn-lg" id="btn-delete-account">
+            Excluir meu perfil e conta permanentemente
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Check-boxes exclusivos para escolha de modalidade de anunciante
+    if (window.GBAuth && typeof GBAuth.bindExclusiveCheckboxes === "function") {
+      GBAuth.bindExclusiveCheckboxes('input[name="prof-tipo"]', box);
+    }
+
+    // Validação de CEP no formulário de perfil
+    let profCepValidated = p.cep ? {
+      ok: true,
+      pais: paisAtual,
+      cep: p.cep,
+      cidade: p.cidade || null,
+      uf: p.uf || null,
+      bairro: p.bairro || null
+    } : null;
+
+    const paisSel = $("#prof-pais", box);
+    const cepInput = $("#prof-cep", box);
+    const cepStatus = $("#prof-cep-status", box);
+
+    async function validarProfCep() {
+      const pais = paisSel.value || "BR";
+      const cep = cepInput.value.trim();
+      if (!cep) { profCepValidated = null; cepStatus.textContent = ""; return null; }
+      cepStatus.textContent = "Validando CEP...";
+      cepStatus.dataset.kind = "loading";
+      const res = await GBCep.validar(pais, cep);
+      if (!res.ok) {
+        profCepValidated = null;
+        cepStatus.textContent = res.erro;
+        cepStatus.dataset.kind = "error";
+        return null;
+      }
+      profCepValidated = res;
+      const loc = [res.bairro, res.cidade, res.uf].filter(Boolean).join(" · ");
+      cepStatus.textContent = "✓ " + (loc || "CEP válido");
+      cepStatus.dataset.kind = "ok";
+      return res;
+    }
+
+    if (window.GBLocal && typeof GBLocal.injetarPreencher === "function") {
+      GBLocal.injetarPreencher("#prof-pais", "#prof-cep", "#prof-cep-status");
+    }
+    cepInput?.addEventListener("blur", validarProfCep);
+    cepInput?.addEventListener("input", () => { profCepValidated = null; });
+    paisSel?.addEventListener("change", () => { profCepValidated = null; validarProfCep(); });
+
+    // Consentimento WhatsApp no perfil
+    const wppInput = $("#prof-whatsapp", box);
+    const consentChk = $("#prof-consent", box);
+    wppInput?.addEventListener("input", () => {
+      const has = wppInput.value.trim().length > 0;
+      consentChk.disabled = !has;
+      if (!has) consentChk.checked = false;
+    });
+
+    // Submissão da edição de perfil
+    $("#profile-edit-form", box)?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errEl = $("#prof-form-error", box);
+      const saveBtn = $("#prof-save-btn", box);
+      errEl.textContent = "";
+
+      const nome = $("#prof-nome", box).value.trim();
+      const checkedTipo = $('input[name="prof-tipo"]:checked', box);
+      const novoPerfilTipo = checkedTipo ? checkedTipo.value : "morador";
+      const wpp = wppInput.value.trim();
+      const consent = consentChk.checked;
+      const newPassword = $("#prof-password", box).value;
+
+      if (nome.length < 2) {
+        errEl.textContent = "Informe um nome válido (mínimo 2 caracteres).";
+        return;
+      }
+      if (wpp && !consent) {
+        errEl.textContent = "Marque o consentimento do WhatsApp ou deixe o campo em branco.";
+        return;
+      }
+      if (newPassword && newPassword.length < 8) {
+        errEl.textContent = "A nova senha precisa ter pelo menos 8 caracteres.";
+        return;
+      }
+
+      const cepVal = profCepValidated || await validarProfCep();
+      if (!cepVal) {
+        errEl.textContent = "Informe um CEP válido para salvar seu perfil.";
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Salvando...";
+
+      try {
+        await GBAuth.updateProfile({
+          nome,
+          perfil_tipo: novoPerfilTipo,
+          pais: cepVal.pais,
+          cep: cepVal.cep,
+          cidade: cepVal.cidade,
+          uf: cepVal.uf,
+          bairro: cepVal.bairro,
+          whatsapp: wpp,
+          whatsapp_consent: consent,
+          password: newPassword || undefined
+        });
+
+        msg("Perfil atualizado com sucesso!");
+        updateAdvertiseAccess();
+        renderDashboard("meu-perfil");
+      } catch (ex) {
+        errEl.textContent = "Erro ao atualizar perfil: " + (ex.message || ex);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Salvar alterações do perfil";
+      }
+    });
+
+    // Exclusão permanente do perfil e conta
+    $("#btn-delete-account", box)?.addEventListener("click", async () => {
+      const ok = confirm(
+        "ATENÇÃO: Tem certeza que deseja excluir permanentemente seu perfil e sua conta?\n\nTodos os seus anúncios e procuras serão apagados."
+      );
+      if (!ok) return;
+
+      const delBtn = $("#btn-delete-account", box);
+      delBtn.disabled = true;
+      delBtn.textContent = "Excluindo conta...";
+
+      try {
+        await GBAuth.deleteAccount();
+        await carregarAnuncios();
+        msg("Seu perfil e sua conta foram excluídos permanentemente.");
+        if (typeof navigate === "function") navigate("hero");
+      } catch (ex) {
+        msg("Erro ao excluir conta: " + (ex.message || ex));
+        delBtn.disabled = false;
+        delBtn.textContent = "Excluir meu perfil e conta permanentemente";
+      }
+    });
+  }
+
+  /* ── 8. ATUALIZAR ACESSO À PÁGINA ANUNCIAR (AJUSTE 01, 02 e 04) ── */
   function updateAdvertiseAccess() {
     const alertBox = $("#adv-auth-alert");
     const formWrap = $("#advertise-form-wrap");
     if (!alertBox || !formWrap) return;
 
+    renderAdvertiseOrigin();
+
     if (!GBAuth.user) {
       alertBox.hidden = false;
       alertBox.innerHTML = `
-        <h3>Cadastre-se para anunciar no bairro</h3>
-        <p>Crie uma conta gratuita de Anunciante para divulgar produtos, serviços ou seu estabelecimento.</p>
-        <button type="button" class="btn btn-white btn-sm" onclick="GBAuth.open('signup')">Criar conta de Anunciante</button>
+        <h3>Cadastre-se ou entre para anunciar no bairro</h3>
+        <p>Todo usuário cadastrado já é um Anunciante (Morador PF, Empresa PJ ou Ambos) e pode publicar gratuitamente.</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button type="button" class="btn btn-white btn-sm" onclick="GBAuth.open('signup')">Criar conta gratuita</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="GBAuth.open('login')">Já tenho conta</button>
+        </div>
       `;
-      formWrap.style.opacity = ".35";
-      formWrap.style.pointerEvents = "none";
-    } else if (GBAuth.profile && GBAuth.profile.tipo !== "anunciante") {
-      alertBox.hidden = false;
-      alertBox.innerHTML = `
-        <h3>Sua conta atual é de Morador</h3>
-        <p>Moradores podem publicar o que estão procurando ("Mural de Procuras"). Para anunciar negócios e produtos, mude para Anunciante gratuitamente.</p>
-        <button type="button" class="btn btn-white btn-sm" id="btn-upgrade-adv-banner">Quero virar Anunciante agora</button>
-      `;
-      $("#btn-upgrade-adv-banner")?.addEventListener("click", virarAnunciante);
       formWrap.style.opacity = ".35";
       formWrap.style.pointerEvents = "none";
     } else {
+      // Todo usuário cadastrado é anunciante e tem acesso liberado ao formulário
       alertBox.hidden = true;
       formWrap.style.opacity = "1";
       formWrap.style.pointerEvents = "auto";
 
-      // Pré-preenche CEP do anúncio se o anunciante tiver
+      // Pré-preenche e valida o CEP do anúncio com o CEP do perfil se o campo estiver vazio
       if (GBAuth.profile && GBAuth.profile.cep) {
         const cepInput = $("#f-adv-cep");
         const paisSel = $("#f-adv-pais");
-        if (cepInput && !cepInput.value) {
-          cepInput.value = GBAuth.profile.cep;
+        const cepStatus = $("#f-adv-cep-status");
+        if (cepInput && !cepInput.value.trim()) {
           if (paisSel && GBAuth.profile.pais) paisSel.value = GBAuth.profile.pais;
-          cepInput.dispatchEvent(new Event("blur"));
+          cepInput.value = GBAuth.profile.cep;
+          advCepValidated = {
+            ok: true,
+            pais: GBAuth.profile.pais || "BR",
+            cep: GBAuth.profile.cep,
+            cidade: GBAuth.profile.cidade || null,
+            uf: GBAuth.profile.uf || null,
+            bairro: GBAuth.profile.bairro || null
+          };
+          if (cepStatus) {
+            const loc = [GBAuth.profile.bairro, GBAuth.profile.cidade, GBAuth.profile.uf].filter(Boolean).join(" · ");
+            cepStatus.textContent = "✓ " + (loc || "CEP válido");
+            cepStatus.dataset.kind = "ok";
+          }
         }
       }
     }
@@ -777,22 +1216,14 @@ window.GBAnuncios = (function () {
 
     carregarAnuncios();
     renderProcurasMural();
-    syncProcuraButtons();
   });
 
-  function syncProcuraButtons() {
-    const isAdv = isAnunciante();
-    const btnListings = $("#btn-open-procura-listings");
-    if (btnListings) btnListings.style.display = isAdv ? "none" : "";
-  }
-
-  // Atualiza quando o usuário loga ou desloga
+  // Atualiza quando o usuário loga, desloga ou edita o perfil
   document.addEventListener("gb-auth", () => {
     const dashLink = $("#menu-dashboard");
     if (dashLink) dashLink.hidden = !GBAuth.user;
     updateAdvertiseAccess();
-    syncProcuraButtons();
-    if (state.page === "dashboard") renderDashboard();
+    if (typeof state !== "undefined" && state.page === "dashboard") renderDashboard();
   });
 
   return {
@@ -800,8 +1231,7 @@ window.GBAnuncios = (function () {
     carregarProcuras,
     renderDashboard,
     openProcuraModal,
-    virarAnunciante,
-    isAnunciante,
-    syncProcuraButtons
+    updateAdvertiseAccess,
+    renderAdvertiseOrigin
   };
 })();

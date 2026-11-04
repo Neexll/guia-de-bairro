@@ -137,24 +137,24 @@ window.GBAnuncios = (function () {
 
   /* ── TIPIFICAÇÃO DO ANÚNCIO (AJUSTE 02) ─────────────────── */
   function renderAdvertiseOrigin() {
-    const box = $("#f-adv-origin-box");
+    const box = $("#f-pub-origin-box");
     if (!box) return;
 
     if (!window.GBAuth || !GBAuth.user) {
       box.innerHTML = `
-        <div class="adv-origin-grid">
-          <label class="adv-origin-option is-checked is-readonly">
-            <input type="checkbox" name="adv-origin" value="De Morador" checked disabled>
-            <span class="adv-origin-check" aria-hidden="true">✓</span>
-            <span class="adv-origin-info">
+        <div class="pub-origin-grid">
+          <label class="pub-origin-option is-checked is-readonly">
+            <input type="checkbox" name="pub-origin" value="De Morador" checked disabled>
+            <span class="pub-origin-check" aria-hidden="true">✓</span>
+            <span class="pub-origin-info">
               <strong>De Morador</strong>
               <small>Pessoa Física</small>
             </span>
           </label>
-          <label class="adv-origin-option is-readonly">
-            <input type="checkbox" name="adv-origin" value="De Empresa" disabled>
-            <span class="adv-origin-check" aria-hidden="true">✓</span>
-            <span class="adv-origin-info">
+          <label class="pub-origin-option is-readonly">
+            <input type="checkbox" name="pub-origin" value="De Empresa" disabled>
+            <span class="pub-origin-check" aria-hidden="true">✓</span>
+            <span class="pub-origin-info">
               <strong>De Empresa</strong>
               <small>Pessoa Jurídica</small>
             </span>
@@ -170,11 +170,11 @@ window.GBAnuncios = (function () {
     if (pTipo === "morador") {
       // Anunciante Morador (Pessoa Física): já aparece "De Morador", sem opção de edição
       box.innerHTML = `
-        <div class="adv-origin-grid">
-          <label class="adv-origin-option is-checked is-readonly">
-            <input type="checkbox" name="adv-origin" value="De Morador" checked disabled>
-            <span class="adv-origin-check" aria-hidden="true">✓</span>
-            <span class="adv-origin-info">
+        <div class="pub-origin-grid">
+          <label class="pub-origin-option is-checked is-readonly">
+            <input type="checkbox" name="pub-origin" value="De Morador" checked disabled>
+            <span class="pub-origin-check" aria-hidden="true">✓</span>
+            <span class="pub-origin-info">
               <strong>De Morador</strong>
               <small>Anunciante Morador (Pessoa Física) — fixo conforme seu perfil</small>
             </span>
@@ -184,11 +184,11 @@ window.GBAnuncios = (function () {
     } else if (pTipo === "empresa") {
       // Anunciante Empresa (Pessoa Jurídica): já aparece "De Empresa", sem opção de edição
       box.innerHTML = `
-        <div class="adv-origin-grid">
-          <label class="adv-origin-option is-checked is-readonly">
-            <input type="checkbox" name="adv-origin" value="De Empresa" checked disabled>
-            <span class="adv-origin-check" aria-hidden="true">✓</span>
-            <span class="adv-origin-info">
+        <div class="pub-origin-grid">
+          <label class="pub-origin-option is-checked is-readonly">
+            <input type="checkbox" name="pub-origin" value="De Empresa" checked disabled>
+            <span class="pub-origin-check" aria-hidden="true">✓</span>
+            <span class="pub-origin-info">
               <strong>De Empresa</strong>
               <small>Anunciante Empresa (Pessoa Jurídica) — fixo conforme seu perfil</small>
             </span>
@@ -198,19 +198,19 @@ window.GBAnuncios = (function () {
     } else {
       // Anunciante Morador e Empresa (PF e PJ): aparecem "De Morador" e "De Empresa" com opção de edição com check-boxes
       box.innerHTML = `
-        <div class="adv-origin-grid">
-          <label class="adv-origin-option is-checked">
-            <input type="checkbox" name="adv-origin" value="De Morador" checked>
-            <span class="adv-origin-check" aria-hidden="true">✓</span>
-            <span class="adv-origin-info">
+        <div class="pub-origin-grid">
+          <label class="pub-origin-option is-checked">
+            <input type="checkbox" name="pub-origin" value="De Morador" checked>
+            <span class="pub-origin-check" aria-hidden="true">✓</span>
+            <span class="pub-origin-info">
               <strong>De Morador</strong>
               <small>Pessoa Física</small>
             </span>
           </label>
-          <label class="adv-origin-option">
-            <input type="checkbox" name="adv-origin" value="De Empresa">
-            <span class="adv-origin-check" aria-hidden="true">✓</span>
-            <span class="adv-origin-info">
+          <label class="pub-origin-option">
+            <input type="checkbox" name="pub-origin" value="De Empresa">
+            <span class="pub-origin-check" aria-hidden="true">✓</span>
+            <span class="pub-origin-info">
               <strong>De Empresa</strong>
               <small>Pessoa Jurídica</small>
             </span>
@@ -219,14 +219,14 @@ window.GBAnuncios = (function () {
         <span class="f-hint">Seu perfil é de Morador e Empresa: selecione nos check-boxes a tipificação deste anúncio.</span>
       `;
 
-      const checks = $$('input[name="adv-origin"]', box);
+      const checks = $$('input[name="pub-origin"]', box);
       checks.forEach(chk => {
         chk.addEventListener("change", () => {
           if (!checks.some(c => c.checked)) {
             chk.checked = true;
           }
           checks.forEach(c => {
-            c.closest(".adv-origin-option")?.classList.toggle("is-checked", c.checked);
+            c.closest(".pub-origin-option")?.classList.toggle("is-checked", c.checked);
           });
         });
       });
@@ -237,18 +237,18 @@ window.GBAnuncios = (function () {
     const pTipo = getPerfilTipo();
     if (pTipo === "morador") return "De Morador";
     if (pTipo === "empresa") return "De Empresa";
-    const checked = $$('#f-adv-origin-box input[name="adv-origin"]:checked').map(c => c.value);
+    const checked = $$('#f-pub-origin-box input[name="pub-origin"]:checked').map(c => c.value);
     if (!checked.length) return "De Morador";
     return checked.join(" e ");
   }
 
   /* ── 3. FORMULÁRIO DE ANÚNCIO (SEÇÃO #advertise) ───────── */
   function initAdvertiseForm() {
-    const form = $("#advertise-form");
+    const form = $("#pub-form");
     if (!form) return;
 
     // Popula seletor de país do CEP do anúncio
-    const paisSel = $("#f-adv-pais");
+    const paisSel = $("#f-pub-pais");
     if (paisSel && window.GBCep) {
       paisSel.innerHTML = GBCep.COUNTRIES.map(([c, n]) => `<option value="${c}">${n}</option>`).join("");
     }
@@ -294,8 +294,8 @@ window.GBAnuncios = (function () {
     }
 
     // Validação de CEP do anúncio
-    const cepInput = $("#f-adv-cep");
-    const cepStatus = $("#f-adv-cep-status");
+    const cepInput = $("#f-pub-cep");
+    const cepStatus = $("#f-pub-cep-status");
     async function validarAdvCep() {
       if (!cepInput || !paisSel) return null;
       const pais = paisSel.value || "BR";
@@ -338,7 +338,7 @@ window.GBAnuncios = (function () {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const btn = $("#submit-btn");
-      const errBox = $("#adv-form-error");
+      const errBox = $("#pub-form-error");
       if (errBox) errBox.textContent = "";
 
       // 1. Checa autenticação
@@ -354,7 +354,7 @@ window.GBAnuncios = (function () {
       const preco = parsePrecoValor($("#f-price")?.value || "");
       const videoUrl = $("#f-video")?.value.trim() || null;
       const instagram = $("#f-instagram")?.value.trim() || null;
-      const whatsappContato = $("#f-adv-whatsapp")?.value.trim() || null;
+      const whatsappContato = $("#f-pub-whatsapp")?.value.trim() || null;
       const outrasRedesTxt = $("#f-outras-redes")?.value.trim() || "";
       const origemAnuncio = getSelectedAdvertiseOrigin();
 
@@ -662,7 +662,7 @@ window.GBAnuncios = (function () {
             <div>
               <h2 class="dash-name">${p.nome || GBAuth.user.email}</h2>
               <div class="dash-badges">
-                <span class="dash-badge badge-adv">🏪 ${badgeLabel}</span>
+                <span class="dash-badge badge-pub">🏪 ${badgeLabel}</span>
                 <span class="dash-sub">${p.cidade ? `${p.bairro ? p.bairro + ' · ' : ''}${p.cidade}` : `CEP ${p.cep || ''}`}</span>
               </div>
             </div>
@@ -670,7 +670,7 @@ window.GBAnuncios = (function () {
 
           <div class="dash-head-actions" style="display:flex;gap:10px;flex-wrap:wrap">
             <button type="button" class="btn btn-ghost btn-lg" id="btn-dash-goto-profile">👤 Ver / Editar Perfil</button>
-            <a href="#advertise" data-page="advertise" class="btn btn-white btn-lg">Novo Anúncio</a>
+            <a href="#anunciar" data-page="anunciar" class="btn btn-white btn-lg">Novo Anúncio</a>
           </div>
         </div>
 
@@ -721,7 +721,7 @@ window.GBAnuncios = (function () {
         box.innerHTML = `
           <div class="dash-empty">
             <p>Você ainda não cadastrou nenhum anúncio.</p>
-            <a href="#advertise" data-page="advertise" class="btn btn-white btn-lg" style="margin-top:12px">Criar meu primeiro anúncio</a>
+            <a href="#anunciar" data-page="anunciar" class="btn btn-white btn-lg" style="margin-top:12px">Criar meu primeiro anúncio</a>
           </div>
         `;
         return;
@@ -729,7 +729,7 @@ window.GBAnuncios = (function () {
 
       box.innerHTML = `
         <div style="margin-bottom:16px;text-align:right">
-          <a href="#advertise" data-page="advertise" class="btn btn-white btn-lg">Criar Novo Anúncio</a>
+          <a href="#anunciar" data-page="anunciar" class="btn btn-white btn-lg">Criar Novo Anúncio</a>
         </div>
         <div class="dash-grid">
           ${data.map(a => {
@@ -879,9 +879,9 @@ window.GBAnuncios = (function () {
     box.innerHTML = `
       <div class="profile-settings-grid">
         <!-- Card de Visualização e Edição do Perfil -->
-        <div class="adv-form-wrap profile-card">
-          <div class="adv-form-head">Meus Dados e Perfil de Anunciante</div>
-          <div class="adv-form-body">
+        <div class="pub-form-wrap profile-card">
+          <div class="pub-form-head">Meus Dados e Perfil de Anunciante</div>
+          <div class="pub-form-body">
             <form id="profile-edit-form" novalidate>
               <div class="f-grid">
 
@@ -1122,8 +1122,8 @@ window.GBAnuncios = (function () {
 
   /* ── 8. ATUALIZAR ACESSO À PÁGINA ANUNCIAR (AJUSTE 01, 02 e 04) ── */
   function updateAdvertiseAccess() {
-    const alertBox = $("#adv-auth-alert");
-    const formWrap = $("#advertise-form-wrap");
+    const alertBox = $("#pub-auth-alert");
+    const formWrap = $("#pub-form-wrap");
     if (!alertBox || !formWrap) return;
 
     renderAdvertiseOrigin();
@@ -1148,9 +1148,9 @@ window.GBAnuncios = (function () {
 
       // Pré-preenche e valida o CEP do anúncio com o CEP do perfil se o campo estiver vazio
       if (GBAuth.profile && GBAuth.profile.cep) {
-        const cepInput = $("#f-adv-cep");
-        const paisSel = $("#f-adv-pais");
-        const cepStatus = $("#f-adv-cep-status");
+        const cepInput = $("#f-pub-cep");
+        const paisSel = $("#f-pub-pais");
+        const cepStatus = $("#f-pub-cep-status");
         if (cepInput && !cepInput.value.trim()) {
           if (paisSel && GBAuth.profile.pais) paisSel.value = GBAuth.profile.pais;
           cepInput.value = GBAuth.profile.cep;

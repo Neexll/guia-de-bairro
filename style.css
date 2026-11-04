@@ -146,7 +146,7 @@ ul {
 }
 
 .fade-in.visible,
-#advertise .fade-in {
+#anunciar .fade-in {
   opacity: 1;
   transform: none
 }
@@ -1603,23 +1603,23 @@ section.page:not(#hero) {
 /* ─────────────────────────────────────────────────────────
    ADVERTISE
    ───────────────────────────────────────────────────────── */
-#advertise {
+#anunciar {
   padding: 120px 0
 }
 
-.adv-inner {
+.pub-inner {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 80px;
   align-items: start;
 }
 
-.adv-left {
+.pub-left {
   position: sticky;
   top: calc(var(--nav-h) + 32px)
 }
 
-.adv-perks {
+.pub-perks {
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -1627,7 +1627,7 @@ section.page:not(#hero) {
   border-top: 1px solid var(--b1)
 }
 
-.adv-perk {
+.pub-perk {
   display: flex;
   align-items: flex-start;
   gap: 16px;
@@ -1635,7 +1635,7 @@ section.page:not(#hero) {
   border-bottom: 1px solid var(--b1);
 }
 
-.adv-perk-icon {
+.pub-perk-icon {
   width: 28px;
   height: 28px;
   flex-shrink: 0;
@@ -1647,7 +1647,7 @@ section.page:not(#hero) {
   margin-top: 2px;
 }
 
-.adv-perk-icon svg {
+.pub-perk-icon svg {
   width: 13px;
   height: 13px;
   stroke: var(--t2);
@@ -1657,7 +1657,7 @@ section.page:not(#hero) {
   stroke-linejoin: round
 }
 
-.adv-perk strong {
+.pub-perk strong {
   display: block;
   font-size: .825rem;
   font-weight: 500;
@@ -1666,19 +1666,19 @@ section.page:not(#hero) {
   letter-spacing: -.01em
 }
 
-.adv-perk span {
+.pub-perk span {
   font-size: .775rem;
   color: var(--t2)
 }
 
 /* Form */
-.adv-form-wrap {
+.pub-form-wrap {
   border: 1px solid var(--b1);
   border-radius: var(--r-lg);
   overflow: hidden;
 }
 
-.adv-form-head {
+.pub-form-head {
   padding: 20px 24px;
   border-bottom: 1px solid var(--b1);
   background: var(--s2);
@@ -1688,7 +1688,7 @@ section.page:not(#hero) {
   letter-spacing: -.01em;
 }
 
-.adv-form-body {
+.pub-form-body {
   padding: 24px;
   background: var(--s1);
 }
@@ -2187,12 +2187,12 @@ textarea.f-input {
    RESPONSIVE
    ───────────────────────────────────────────────────────── */
 @media(max-width:960px) {
-  .adv-inner {
+  .pub-inner {
     grid-template-columns: 1fr;
     gap: 48px
   }
 
-  .adv-left {
+  .pub-left {
     position: static
   }
 
@@ -2263,7 +2263,7 @@ textarea.f-input {
     grid-template-columns: 1fr
   }
 
-  .adv-inner {
+  .pub-inner {
     gap: 32px
   }
 
@@ -2750,14 +2750,14 @@ button.mobile-nav-link {
 }
 
 /* ── Tipificação do Anúncio (AJUSTE 02) ─────────────────── */
-.adv-origin-grid {
+.pub-origin-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 10px;
   margin-top: 6px;
 }
 
-.adv-origin-option {
+.pub-origin-option {
   position: relative;
   display: flex;
   align-items: center;
@@ -2770,13 +2770,13 @@ button.mobile-nav-link {
   transition: border-color .15s, background .15s;
 }
 
-.adv-origin-option input {
+.pub-origin-option input {
   position: absolute;
   opacity: 0;
   pointer-events: none;
 }
 
-.adv-origin-check {
+.pub-origin-check {
   width: 20px;
   height: 20px;
   border-radius: 6px;
@@ -2792,35 +2792,35 @@ button.mobile-nav-link {
   transition: all .15s ease;
 }
 
-.adv-origin-info {
+.pub-origin-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.adv-origin-info strong {
+.pub-origin-info strong {
   font-size: .88rem;
   color: var(--t1);
 }
 
-.adv-origin-info small {
+.pub-origin-info small {
   font-size: .72rem;
   color: var(--t2);
   line-height: 1.3;
 }
 
-.adv-origin-option.is-checked {
+.pub-origin-option.is-checked {
   border-color: var(--t1);
   background: var(--s2);
 }
 
-.adv-origin-option.is-checked .adv-origin-check {
+.pub-origin-option.is-checked .pub-origin-check {
   background: var(--t1);
   border-color: var(--t1);
   color: var(--bg);
 }
 
-.adv-origin-option.is-readonly {
+.pub-origin-option.is-readonly {
   cursor: default;
 }
 
@@ -3079,7 +3079,7 @@ body.auth-open {
 }
 
 /* ── FORMULÁRIO DE ANÚNCIO (FOTOS & CEP) ─────────────────── */
-.adv-auth-alert {
+.pub-auth-alert {
   background: var(--s1);
   border: 1.5px solid var(--b1);
   border-radius: 20px;
@@ -3088,12 +3088,12 @@ body.auth-open {
   text-align: center;
 }
 
-.adv-auth-alert h3 {
+.pub-auth-alert h3 {
   font-size: 1.15rem;
   margin-bottom: 6px;
 }
 
-.adv-auth-alert p {
+.pub-auth-alert p {
   font-size: .85rem;
   color: var(--t2);
   margin-bottom: 16px;
@@ -3208,7 +3208,7 @@ body.auth-open {
   border-radius: var(--pill);
 }
 
-.badge-adv {
+.badge-pub {
   background: rgba(63, 178, 127, .15);
   color: #3fb27f;
   border: 1px solid rgba(63, 178, 127, .3);

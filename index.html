@@ -7,7 +7,7 @@
   <title>Guia de Bairros</title>
   <meta name="description"
     content="Encontre restaurantes, lojas e serviços no seu bairro. Anuncie seu negócio gratuitamente.">
-  <link rel="stylesheet" href="style.css?v=20261103">
+  <link rel="stylesheet" href="style.css?v=20261104">
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23000'/><text x='5' y='24' font-family='Inter,sans-serif' font-size='22' font-weight='500' fill='%23fff'>G</text></svg>">
 </head>
@@ -46,7 +46,7 @@
       <a href="#hero" class="mobile-nav-link" data-page="hero">Início</a>
       <a href="#listings" class="mobile-nav-link" data-page="listings">Negócios</a>
       <a href="#how-it-works" class="mobile-nav-link" data-page="how-it-works">Como funciona</a>
-      <a href="#advertise" class="mobile-nav-link" data-page="advertise" id="nav-cta">Anunciar grátis</a>
+      <a href="#anunciar" class="mobile-nav-link" data-page="anunciar" id="nav-cta">Anunciar grátis</a>
       <a href="#dashboard" class="mobile-nav-link" data-page="dashboard" id="menu-dashboard" hidden>Minha conta</a>
       <button type="button" class="mobile-nav-link" id="menu-auth">Entrar / Cadastrar</button>
     </div>
@@ -85,7 +85,7 @@
 
     <div class="hero-ctas fade-in">
       <button class="btn btn-ghost btn-lg" id="btn-explore">Explorar negócios</button>
-      <button class="btn btn-white btn-lg" id="btn-advertise">Anuncie seu negócio</button>
+      <button class="btn btn-white btn-lg" id="btn-anunciar">Anuncie seu negócio</button>
     </div>
 
     <!-- HERO CHATBOT PREVIEW (Em desenvolvimento) -->
@@ -287,23 +287,23 @@
   </section>
 
   <!-- ADVERTISE ───────────────────────────────────────────── -->
-  <section id="advertise" class="page">
+  <section id="anunciar" class="page">
     <div class="container">
-      <div class="adv-inner">
+      <div class="pub-inner">
 
         <!-- Esquerda: copy -->
-        <div class="adv-left fade-in visible">
+        <div class="pub-left fade-in visible">
           <span class="section-label">Anunciar</span>
-          <h2 class="section-h2" id="advertise-heading">
+          <h2 class="section-h2" id="anunciar-heading">
             Conecte seu negócio com o bairro
           </h2>
           <p class="section-p" style="margin-bottom:0">
             Cadastro gratuito, sem mensalidade, sem comissão. Seu estabelecimento listado em minutos.
           </p>
 
-          <div class="adv-perks">
-            <div class="adv-perk">
-              <div class="adv-perk-icon">
+          <div class="pub-perks">
+            <div class="pub-perk">
+              <div class="pub-perk-icon">
                 <!-- location icon -->
                 <svg viewBox="0 0 24 24">
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
@@ -315,8 +315,8 @@
                 <span>Apareça para quem busca na sua categoria e região.</span>
               </div>
             </div>
-            <div class="adv-perk">
-              <div class="adv-perk-icon">
+            <div class="pub-perk">
+              <div class="pub-perk-icon">
                 <!-- star icon -->
                 <svg viewBox="0 0 24 24">
                   <polygon
@@ -328,8 +328,8 @@
                 <span>Seus clientes recomendam e avaliam seu serviço.</span>
               </div>
             </div>
-            <div class="adv-perk">
-              <div class="adv-perk-icon">
+            <div class="pub-perk">
+              <div class="pub-perk-icon">
                 <!-- phone icon -->
                 <svg viewBox="0 0 24 24">
                   <path
@@ -341,8 +341,8 @@
                 <span>Um clique para ligar ou enviar mensagem no WhatsApp.</span>
               </div>
             </div>
-            <div class="adv-perk">
-              <div class="adv-perk-icon">
+            <div class="pub-perk">
+              <div class="pub-perk-icon">
                 <!-- free / circle icon -->
                 <svg viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" />
@@ -360,19 +360,19 @@
 
         <!-- Direita: formulário -->
         <div class="fade-in visible">
-          <div class="adv-form-wrap">
-            <div class="adv-form-head">Publicar anúncio no bairro</div>
+          <div class="pub-form-wrap">
+            <div class="pub-form-head">Publicar anúncio no bairro</div>
 
-            <div id="adv-auth-alert" class="adv-auth-alert" hidden></div>
+            <div id="pub-auth-alert" class="pub-auth-alert" hidden></div>
 
-            <div class="adv-form-body" id="advertise-form-wrap">
-              <form id="advertise-form" novalidate>
+            <div class="pub-form-body" id="pub-form-wrap">
+              <form id="pub-form" novalidate>
                 <div class="f-grid">
 
                   <!-- Tipificação do Anúncio (AJUSTE 02) -->
-                  <div class="f-field f-col2" id="f-adv-origin-wrap">
+                  <div class="f-field f-col2" id="f-pub-origin-wrap">
                     <label class="f-label">Tipificação do anúncio *</label>
-                    <div id="f-adv-origin-box" class="adv-origin-box"></div>
+                    <div id="f-pub-origin-box" class="pub-origin-box"></div>
                   </div>
 
                   <div class="f-field f-col2">
@@ -410,10 +410,10 @@
                   <div class="f-field f-col2 f-cep-highlight">
                     <label class="f-label">Em qual CEP você quer cadastrar o anúncio? *</label>
                     <div class="auth-row" style="margin-top:6px">
-                      <select class="f-input" id="f-adv-pais"></select>
-                      <input class="f-input" id="f-adv-cep" type="text" placeholder="CEP do anúncio">
+                      <select class="f-input" id="f-pub-pais"></select>
+                      <input class="f-input" id="f-pub-cep" type="text" placeholder="CEP do anúncio">
                     </div>
-                    <p id="f-adv-cep-status" class="auth-cep-status"></p>
+                    <p id="f-pub-cep-status" class="auth-cep-status"></p>
                     <span class="f-hint">Você pode escolher um CEP diferente do seu cadastro se o serviço/loja for em outro local.</span>
                   </div>
 
@@ -439,8 +439,8 @@
                   </div>
 
                   <div class="f-field">
-                    <label class="f-label" for="f-adv-whatsapp">WhatsApp para contato</label>
-                    <input class="f-input" id="f-adv-whatsapp" type="tel" placeholder="(11) 90000-0000">
+                    <label class="f-label" for="f-pub-whatsapp">WhatsApp para contato</label>
+                    <input class="f-input" id="f-pub-whatsapp" type="tel" placeholder="(11) 90000-0000">
                   </div>
 
                   <div class="f-field f-col2">
@@ -455,7 +455,7 @@
                       placeholder="Descreva detalhadamente o produto, serviço, diferenciais, formas de atendimento e entrega."></textarea>
                   </div>
 
-                  <div id="adv-form-error" class="auth-error f-col2"></div>
+                  <div id="pub-form-error" class="auth-error f-col2"></div>
 
                   <div class="f-field f-col2 f-submit">
                     <button type="submit" class="btn btn-white btn-lg" id="submit-btn"
@@ -496,16 +496,16 @@
           <ul>
             <li><a href="#listings">Negócios</a></li>
             <li><a href="#how-it-works">Como funciona</a></li>
-            <li><a href="#advertise">Anunciar</a></li>
+            <li><a href="#anunciar">Anunciar</a></li>
           </ul>
         </div>
 
         <div class="footer-col">
           <h4>Anunciar</h4>
           <ul>
-            <li><a href="#advertise">Cadastrar negócio</a></li>
-            <li><a href="#advertise">Planos</a></li>
-            <li><a href="#advertise">Suporte</a></li>
+            <li><a href="#anunciar">Cadastrar negócio</a></li>
+            <li><a href="#anunciar">Planos</a></li>
+            <li><a href="#anunciar">Suporte</a></li>
           </ul>
         </div>
 
@@ -671,12 +671,12 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20261103"></script>
-  <script src="cep.js?v=20261103"></script>
-  <script src="localizacao.js?v=20261103"></script>
-  <script src="anuncios.js?v=20261103"></script>
-  <script src="app.js?v=20261103"></script>
-  <script src="auth.js?v=20261103"></script>
+  <script src="config.js?v=20261104"></script>
+  <script src="cep.js?v=20261104"></script>
+  <script src="localizacao.js?v=20261104"></script>
+  <script src="anuncios.js?v=20261104"></script>
+  <script src="app.js?v=20261104"></script>
+  <script src="auth.js?v=20261104"></script>
 </body>
 
 </html>

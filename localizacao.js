@@ -255,7 +255,7 @@ window.GBLocal = (function () {
     if (only) only.addEventListener("change", () => { apenasPerto = only.checked; emitir(); });
 
     injetarPreencher("#auth-pais", "#auth-cep", "#auth-cep-status");
-    injetarPreencher("#f-adv-pais", "#f-adv-cep", "#f-adv-cep-status");
+    injetarPreencher("#f-pub-pais", "#f-pub-cep", "#f-pub-cep-status");
     injetarPreencher("#f-proc-pais", "#f-proc-cep", "#f-proc-cep-status");
     render();
 

@@ -326,7 +326,7 @@ const state = {
   heroSearchVisible: true
 };
 
-const PAGES = ["hero", "listings", "how-it-works", "advertise", "dashboard"];
+const PAGES = ["hero", "listings", "how-it-works", "anunciar", "dashboard"];
 const FALLBACK_IMG = "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80";
 const cardCarouselStops = [];
 let modalCarouselStop = null;
@@ -474,12 +474,12 @@ function initCarousel(root, { interval = 3800, delay = 0 } = {}) {
 /* ── Páginas (navegação por seção) ─────────────────────────────── */
 function pageFromHash() {
   const h = decodeURIComponent(location.hash.replace("#", ""));
-  if (h === "categories") return "listings";
+  if (h === "categories") return "listings"; if (h === "advertise") return "anunciar";
   return PAGES.includes(h) ? h : "hero";
 }
 
 function showPage(id) {
-  const targetId = PAGES.includes(id) ? id : "hero";
+  const normId = id === "advertise" ? "anunciar" : id; const targetId = PAGES.includes(normId) ? normId : "hero";
   state.page = targetId;
   $$("section.page").forEach(s => s.classList.toggle("page-active", s.id === targetId));
   $$("[data-page]").forEach(a => a.classList.toggle("active", a.dataset.page === targetId));
@@ -497,11 +497,11 @@ function showPage(id) {
   updateStickySearch();
   observeFadeIns();
   if (targetId === "dashboard" && window.GBAnuncios) window.GBAnuncios.renderDashboard();
-  if (targetId === "advertise" && window.GBAnuncios && window.GBAnuncios.updateAdvertiseAccess) window.GBAnuncios.updateAdvertiseAccess();
+  if (targetId === "anunciar" && window.GBAnuncios && window.GBAnuncios.updateAdvertiseAccess) window.GBAnuncios.updateAdvertiseAccess();
 }
 
 function navigate(id) {
-  const targetId = PAGES.includes(id) ? id : "hero";
+  const normId = id === "advertise" ? "anunciar" : id; const targetId = PAGES.includes(normId) ? normId : "hero";
   if (location.hash === `#${targetId}`) {
     showPage(targetId);
   } else {
@@ -517,7 +517,7 @@ function initPages() {
     if (!a) return;
     const raw = decodeURIComponent((a.getAttribute("href") || "").replace(/^#/, ""));
     if (!raw) return;
-    const target = raw === "categories" ? "listings" : raw;
+    const target = raw === "categories" ? "listings" : (raw === "advertise" ? "anunciar" : raw);
     if (PAGES.includes(target)) {
       e.preventDefault();
       closeMob();
@@ -605,7 +605,7 @@ function initHero() {
   input.addEventListener("keydown", e => e.key === "Enter" && search());
   $("#hero-search-btn")?.addEventListener("click", search);
   $("#btn-explore")?.addEventListener("click", () => navigate("listings"));
-  $("#btn-advertise")?.addEventListener("click", () => navigate("advertise"));
+  $("#btn-anunciar")?.addEventListener("click", () => navigate("anunciar"));
 }
 
 /* ── Categories (pills) ──────────────────────────────────── */

@@ -39,11 +39,11 @@ window.GBAnuncios = (function () {
   }
 
   function extrairOrigemAnuncio(a) {
-    if (a.tipo_anuncio) return a.tipo_anuncio;
     if (Array.isArray(a.outras_redes)) {
       const item = a.outras_redes.find(r => r && r.tipo === "origem" && r.valor);
       if (item) return item.valor;
     }
+    if (a.tipo_anuncio) return a.tipo_anuncio;
     return "De Morador";
   }
 
@@ -670,7 +670,7 @@ window.GBAnuncios = (function () {
 
           <div class="dash-head-actions" style="display:flex;gap:10px;flex-wrap:wrap">
             <button type="button" class="btn btn-ghost btn-lg" id="btn-dash-goto-profile">👤 Ver / Editar Perfil</button>
-            <a href="#advertise" class="btn btn-white btn-lg">Novo Anúncio</a>
+            <a href="#advertise" data-page="advertise" class="btn btn-white btn-lg">Novo Anúncio</a>
           </div>
         </div>
 
@@ -721,7 +721,7 @@ window.GBAnuncios = (function () {
         box.innerHTML = `
           <div class="dash-empty">
             <p>Você ainda não cadastrou nenhum anúncio.</p>
-            <a href="#advertise" class="btn btn-white btn-lg" style="margin-top:12px">Criar meu primeiro anúncio</a>
+            <a href="#advertise" data-page="advertise" class="btn btn-white btn-lg" style="margin-top:12px">Criar meu primeiro anúncio</a>
           </div>
         `;
         return;
@@ -729,7 +729,7 @@ window.GBAnuncios = (function () {
 
       box.innerHTML = `
         <div style="margin-bottom:16px;text-align:right">
-          <a href="#advertise" class="btn btn-white btn-lg">Criar Novo Anúncio</a>
+          <a href="#advertise" data-page="advertise" class="btn btn-white btn-lg">Criar Novo Anúncio</a>
         </div>
         <div class="dash-grid">
           ${data.map(a => {

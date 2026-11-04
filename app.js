@@ -479,23 +479,51 @@ function pageFromHash() {
 }
 
 function showPage(id) {
-  state.page = id;
-  $$("section.page").forEach(s => s.classList.toggle("page-active", s.id === id));
-  $$("[data-page]").forEach(a => a.classList.toggle("active", a.dataset.page === id));
-  window.scrollTo({ top: 0, behavior: "instant" });
+  const targetId = PAGES.includes(id) ? id : "hero";
+  state.page = targetId;
+  $$("section.page").forEach(s => s.classList.toggle("page-active", s.id === targetId));
+  $$("[data-page]").forEach(a => a.classList.toggle("active", a.dataset.page === targetId));
+  $$(`#${targetId} .fade-in`).forEach(el => el.classList.add("visible"));
+  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    updateStickySearch();
+    observeFadeIns();
+  });
   updateStickySearch();
   observeFadeIns();
-  if (id === "dashboard" && window.GBAnuncios) window.GBAnuncios.renderDashboard();
-  if (id === "advertise" && window.GBAnuncios && window.GBAnuncios.updateAdvertiseAccess) window.GBAnuncios.updateAdvertiseAccess();
+  if (targetId === "dashboard" && window.GBAnuncios) window.GBAnuncios.renderDashboard();
+  if (targetId === "advertise" && window.GBAnuncios && window.GBAnuncios.updateAdvertiseAccess) window.GBAnuncios.updateAdvertiseAccess();
 }
 
 function navigate(id) {
-  if (location.hash === `#${id}`) showPage(id);
-  else location.hash = id; // dispara hashchange → showPage
+  const targetId = PAGES.includes(id) ? id : "hero";
+  if (location.hash === `#${targetId}`) {
+    showPage(targetId);
+  } else {
+    location.hash = targetId;
+    showPage(targetId);
+  }
 }
 
 function initPages() {
   window.addEventListener("hashchange", () => showPage(pageFromHash()));
+  document.addEventListener("click", e => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    const raw = decodeURIComponent((a.getAttribute("href") || "").replace(/^#/, ""));
+    if (!raw) return;
+    const target = raw === "categories" ? "listings" : raw;
+    if (PAGES.includes(target)) {
+      e.preventDefault();
+      closeMob();
+      navigate(target);
+    }
+  });
   showPage(pageFromHash());
 }
 

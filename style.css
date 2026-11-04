@@ -145,7 +145,8 @@ ul {
   transition: opacity .6s var(--ease), transform .6s var(--ease)
 }
 
-.fade-in.visible {
+.fade-in.visible,
+#advertise .fade-in {
   opacity: 1;
   transform: none
 }
@@ -192,13 +193,6 @@ body.is-scrolled .top-banner {
 
 [data-theme="light"] #navbar.scrolled {
   background: rgba(255, 255, 255, .92);
-}
-
-/* Ao rolar: o header some e fica somente a barra de busca */
-body.is-scrolled #navbar {
-  transform: translateY(-100%);
-  opacity: 0;
-  pointer-events: none;
 }
 
 /* ── Barra de busca flutuante (desce junto com a página) ─────── */

@@ -479,10 +479,25 @@ function pageFromHash() {
 }
 
 function showPage(id) {
-  const normId = id === "advertise" ? "anunciar" : id; const targetId = PAGES.includes(normId) ? normId : "hero";
+  const normId = id === "advertise" ? "anunciar" : id;
+  const targetId = PAGES.includes(normId) ? normId : "hero";
   state.page = targetId;
-  $$("section.page").forEach(s => s.classList.toggle("page-active", s.id === targetId));
-  $$("[data-page]").forEach(a => a.classList.toggle("active", a.dataset.page === targetId));
+  const oldAdv = document.getElementById("advertise");
+  if (oldAdv) oldAdv.id = "anunciar";
+  $$("section.page").forEach(s => {
+    const active = s.id === targetId || (targetId === "anunciar" && s.id === "advertise");
+    s.classList.toggle("page-active", active);
+    if (active) {
+      s.style.setProperty("display", s.id === "hero" ? "flex" : "block", "important");
+      s.style.setProperty("opacity", "1", "important");
+      s.style.setProperty("visibility", "visible", "important");
+    } else {
+      s.style.removeProperty("display");
+      s.style.removeProperty("opacity");
+      s.style.removeProperty("visibility");
+    }
+  });
+  $$("[data-page]").forEach(a => a.classList.toggle("active", a.dataset.page === targetId || (targetId === "anunciar" && a.dataset.page === "advertise")));
   $$(`#${targetId} .fade-in`).forEach(el => el.classList.add("visible"));
   window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   document.documentElement.scrollTop = 0;

@@ -2810,14 +2810,16 @@ button.mobile-nav-link {
 }
 
 /* ── Tipificação do Anúncio (AJUSTE 02) ─────────────────── */
-.pub-origin-grid {
+.pub-origin-grid,
+.pub-intencao-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 10px;
   margin-top: 6px;
 }
 
-.pub-origin-option {
+.pub-origin-option,
+.pub-intencao-option {
   position: relative;
   display: flex;
   align-items: center;
@@ -2830,13 +2832,15 @@ button.mobile-nav-link {
   transition: border-color .15s, background .15s;
 }
 
-.pub-origin-option input {
+.pub-origin-option input,
+.pub-intencao-option input {
   position: absolute;
   opacity: 0;
   pointer-events: none;
 }
 
-.pub-origin-check {
+.pub-origin-check,
+.pub-intencao-check {
   width: 20px;
   height: 20px;
   border-radius: 6px;
@@ -2852,29 +2856,34 @@ button.mobile-nav-link {
   transition: all .15s ease;
 }
 
-.pub-origin-info {
+.pub-origin-info,
+.pub-intencao-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.pub-origin-info strong {
+.pub-origin-info strong,
+.pub-intencao-info strong {
   font-size: .88rem;
   color: var(--t1);
 }
 
-.pub-origin-info small {
+.pub-origin-info small,
+.pub-intencao-info small {
   font-size: .72rem;
   color: var(--t2);
   line-height: 1.3;
 }
 
-.pub-origin-option.is-checked {
+.pub-origin-option.is-checked,
+.pub-intencao-option.is-checked {
   border-color: var(--t1);
   background: var(--s2);
 }
 
-.pub-origin-option.is-checked .pub-origin-check {
+.pub-origin-option.is-checked .pub-origin-check,
+.pub-intencao-option.is-checked .pub-intencao-check {
   background: var(--t1);
   border-color: var(--t1);
   color: var(--bg);

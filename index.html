@@ -7,7 +7,7 @@
   <title>Guia de Bairros</title>
   <meta name="description"
     content="Encontre restaurantes, lojas e serviços no seu bairro. Anuncie seu negócio gratuitamente.">
-  <link rel="stylesheet" href="style.css?v=20261111b">
+  <link rel="stylesheet" href="style.css?v=20261111c">
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23000'/><text x='5' y='24' font-family='Inter,sans-serif' font-size='22' font-weight='500' fill='%23fff'>G</text></svg>">
 </head>
@@ -369,14 +369,37 @@
               <form id="pub-form" novalidate>
                 <div class="f-grid">
 
+                  <!-- Finalidade da publicação: Ofereço vs Procuro -->
+                  <div class="f-field f-col2" id="f-pub-intencao-wrap">
+                    <label class="f-label">O que você deseja fazer? *</label>
+                    <div class="pub-intencao-grid">
+                      <label class="pub-intencao-option is-checked" data-intencao="ofereco">
+                        <input type="radio" name="pub-intencao" value="ofereco" checked>
+                        <span class="pub-intencao-check" aria-hidden="true">✓</span>
+                        <span class="pub-intencao-info">
+                          <strong>🏷️ Ofereço</strong>
+                          <small>Produto, serviço, comércio ou venda</small>
+                        </span>
+                      </label>
+                      <label class="pub-intencao-option" data-intencao="procuro">
+                        <input type="radio" name="pub-intencao" value="procuro">
+                        <span class="pub-intencao-check" aria-hidden="true">✓</span>
+                        <span class="pub-intencao-info">
+                          <strong>💡 Procuro</strong>
+                          <small>Quero comprar, contratar ou encontrar algo no bairro</small>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
                   <!-- Tipificação do Anúncio (AJUSTE 02) -->
                   <div class="f-field f-col2" id="f-pub-origin-wrap">
-                    <label class="f-label">Tipificação do anúncio *</label>
+                    <label class="f-label">Tipificação do anunciante *</label>
                     <div id="f-pub-origin-box" class="pub-origin-box"></div>
                   </div>
 
                   <div class="f-field f-col2">
-                    <label class="f-label" for="f-name">Título do negócio ou serviço *</label>
+                    <label class="f-label" for="f-name" id="f-name-label">Título do negócio ou serviço *</label>
                     <input class="f-input" id="f-name" name="name" type="text" required
                       placeholder="Ex: Padaria Central, Reformas do Zé, Aulas de Inglês">
                   </div>
@@ -400,10 +423,10 @@
                   </div>
 
                   <div class="f-field">
-                    <label class="f-label" for="f-price">Valor (obrigatório) *</label>
+                    <label class="f-label" for="f-price" id="f-price-label">Valor (obrigatório) *</label>
                     <input class="f-input" id="f-price" name="price" type="text" required
                       placeholder="Ex: A partir de R$ 45,00">
-                    <span class="f-hint">No formato "a partir de R$ X"</span>
+                    <span class="f-hint" id="f-price-hint">No formato "a partir de R$ X"</span>
                   </div>
 
                   <!-- Pergunta do CEP do Anúncio -->
@@ -680,15 +703,38 @@
         <input type="hidden" id="f-edit-id">
 
         <div class="f-grid">
+          <!-- Finalidade: Ofereço vs Procuro -->
+          <div class="f-field f-col2" id="f-edit-intencao-wrap">
+            <label class="f-label">O que você deseja fazer? *</label>
+            <div class="pub-intencao-grid">
+              <label class="pub-intencao-option is-checked" data-edit-intencao="ofereco">
+                <input type="radio" name="edit-intencao" value="ofereco" checked>
+                <span class="pub-intencao-check" aria-hidden="true">✓</span>
+                <span class="pub-intencao-info">
+                  <strong>🏷️ Ofereço</strong>
+                  <small>Produto, serviço, comércio ou venda</small>
+                </span>
+              </label>
+              <label class="pub-intencao-option" data-edit-intencao="procuro">
+                <input type="radio" name="edit-intencao" value="procuro">
+                <span class="pub-intencao-check" aria-hidden="true">✓</span>
+                <span class="pub-intencao-info">
+                  <strong>💡 Procuro</strong>
+                  <small>Quero comprar, contratar ou encontrar algo no bairro</small>
+                </span>
+              </label>
+            </div>
+          </div>
+
           <!-- Tipificação (Origem) -->
           <div class="f-field f-col2" id="f-edit-origin-wrap">
-            <label class="f-label">Tipificação do anúncio *</label>
+            <label class="f-label">Tipificação do anunciante *</label>
             <div id="f-edit-origin-box" class="pub-origin-box"></div>
           </div>
 
           <!-- Título -->
           <div class="f-field f-col2">
-            <label class="f-label" for="f-edit-name">Título do negócio ou serviço *</label>
+            <label class="f-label" for="f-edit-name" id="f-edit-name-label">Título do negócio ou serviço *</label>
             <input class="f-input" id="f-edit-name" type="text" required placeholder="Ex: Padaria Central, Reformas do Zé">
           </div>
 
@@ -713,9 +759,9 @@
 
           <!-- Valor a partir de -->
           <div class="f-field">
-            <label class="f-label" for="f-edit-price">Valor (obrigatório) *</label>
+            <label class="f-label" for="f-edit-price" id="f-edit-price-label">Valor (obrigatório) *</label>
             <input class="f-input" id="f-edit-price" type="text" required placeholder="Ex: A partir de R$ 45,00">
-            <span class="f-hint">No formato "a partir de R$ X"</span>
+            <span class="f-hint" id="f-edit-price-hint">No formato "a partir de R$ X"</span>
           </div>
 
           <!-- CEP do anúncio -->
@@ -787,12 +833,12 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20261111b"></script>
-  <script src="cep.js?v=20261111b"></script>
-  <script src="localizacao.js?v=20261111b"></script>
-  <script src="anuncios.js?v=20261111b"></script>
-  <script src="app.js?v=20261111b"></script>
-  <script src="auth.js?v=20261111b"></script>
+  <script src="config.js?v=20261111c"></script>
+  <script src="cep.js?v=20261111c"></script>
+  <script src="localizacao.js?v=20261111c"></script>
+  <script src="anuncios.js?v=20261111c"></script>
+  <script src="app.js?v=20261111c"></script>
+  <script src="auth.js?v=20261111c"></script>
 </body>
 
 </html>

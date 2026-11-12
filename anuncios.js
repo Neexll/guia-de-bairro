@@ -39,20 +39,51 @@ window.GBAnuncios = (function () {
   }
 
 
+  function extrairIntencaoAnuncio(a) {
+    if (!a) return "ofereco";
+    if (Array.isArray(a.outras_redes)) {
+      const item = a.outras_redes.find(r => r && r.tipo === "intencao" && r.valor);
+      if (item && item.valor) return item.valor.toLowerCase();
+    }
+    const t = String(a.titulo || a.texto || "").trim().toUpperCase();
+    if (t.startsWith("PROCURO") || t.startsWith("PROCURA") || t.startsWith("COMPRO") || t.startsWith("BUSCO") || t.startsWith("PRECISO")) {
+      return "procuro";
+    }
+    return "ofereco";
+  }
+
+  function extrairOrigemAnuncio(a) {
+    if (!a) return "De Morador";
+    if (Array.isArray(a.outras_redes)) {
+      const item = a.outras_redes.find(r => r && r.tipo === "origem" && r.valor);
+      if (item) return item.valor;
+    }
+    if (a.tipo_anuncio) return a.tipo_anuncio;
+    return "De Morador";
+  }
+
   function formatAdForModal(a) {
     const fotos = (a.fotos && a.fotos.length) ? a.fotos : [];
     const principal = fotos[0] || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80";
     const origem = extrairOrigemAnuncio(a);
+    const intencao = extrairIntencaoAnuncio(a);
     const linkRedes = Array.isArray(a.outras_redes) ? (a.outras_redes.find(r => r && r.tipo === "link")?.valor || "") : "";
+    const priceFormatted = a.valor_a_partir !== null
+      ? (intencao === "procuro"
+          ? `Paga até R$ ${Number(a.valor_a_partir).toFixed(2).replace(".", ",")}`
+          : `A partir de R$ ${Number(a.valor_a_partir).toFixed(2).replace(".", ",")}`)
+      : undefined;
+
     return {
       id: "sb-" + a.id,
       dbId: a.id,
       userId: a.user_id,
+      intencao: intencao,
       name: a.titulo || (a.texto ? a.texto.slice(0, 40) + "..." : "Anúncio"),
       category: a.categoria || "Serviços",
       origemAnuncio: origem,
       desc: a.texto,
-      price: a.valor_a_partir !== null ? `A partir de R$ ${Number(a.valor_a_partir).toFixed(2).replace(".", ",")}` : undefined,
+      price: priceFormatted,
       address: [a.bairro, a.cidade, a.uf].filter(Boolean).join(", ") || `CEP ${a.cep}`,
       cep: a.cep,
       bairro: a.bairro,
@@ -71,21 +102,12 @@ window.GBAnuncios = (function () {
       reviews: 1,
       views: 1,
       distance: a.bairro ? `${a.bairro}` : "No bairro",
-      tags: [origem, a.categoria || "Serviços"],
+      tags: [intencao === "procuro" ? "💡 Procuro" : "🏷️ Ofereço", origem, a.categoria || "Serviços"],
       featured: true,
       isUserPost: true,
       publishedAt: a.created_at,
       rawAd: a
     };
-  }
-
-  function extrairOrigemAnuncio(a) {
-    if (Array.isArray(a.outras_redes)) {
-      const item = a.outras_redes.find(r => r && r.tipo === "origem" && r.valor);
-      if (item) return item.valor;
-    }
-    if (a.tipo_anuncio) return a.tipo_anuncio;
-    return "De Morador";
   }
 
   /* ── 1. CARREGAR ANÚNCIOS DO SUPABASE ──────────────────── */
@@ -107,17 +129,24 @@ window.GBAnuncios = (function () {
         const fotos = (a.fotos && a.fotos.length) ? a.fotos : [];
         const principal = fotos[0] || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80";
         const origem = extrairOrigemAnuncio(a);
+        const intencao = extrairIntencaoAnuncio(a);
         const linkRedes = Array.isArray(a.outras_redes) ? (a.outras_redes.find(r => r && r.tipo === "link")?.valor || "") : "";
+        const priceLabel = a.valor_a_partir !== null
+          ? (intencao === "procuro"
+              ? `Paga até R$ ${Number(a.valor_a_partir).toFixed(2).replace(".", ",")}`
+              : `A partir de R$ ${Number(a.valor_a_partir).toFixed(2).replace(".", ",")}`)
+          : undefined;
         return {
           id: "sb-" + a.id,
           dbId: a.id,
           userId: a.user_id,
+          intencao: intencao,
           authorName: (a.profiles && a.profiles.nome) || "",
           name: a.titulo || (a.texto ? a.texto.slice(0, 40) + "..." : "Anúncio"),
           category: a.categoria || "Serviços",
           origemAnuncio: origem,
           desc: a.texto,
-          price: a.valor_a_partir !== null ? `A partir de R$ ${Number(a.valor_a_partir).toFixed(2).replace(".", ",")}` : undefined,
+          price: priceLabel,
           address: [a.bairro, a.cidade, a.uf].filter(Boolean).join(", ") || `CEP ${a.cep}`,
           cep: a.cep,
           bairro: a.bairro,
@@ -136,7 +165,7 @@ window.GBAnuncios = (function () {
           reviews: 1,
           views: 1,
           distance: a.bairro ? `${a.bairro}` : "No bairro",
-          tags: [origem, a.categoria || "Serviços"],
+          tags: [intencao === "procuro" ? "💡 Procuro" : "🏷️ Ofereço", origem, a.categoria || "Serviços"],
           featured: true,
           isUserPost: true,
           publishedAt: a.created_at,
@@ -167,16 +196,41 @@ window.GBAnuncios = (function () {
   async function carregarProcuras() {
     if (!window.GBSupabase) return [];
     try {
-      const { data, error } = await GBSupabase
-        .from("procuras")
-        .select("*, profiles:user_id(nome, tipo, whatsapp)")
-        .order("created_at", { ascending: false });
+      const [resProcuras, resAnuncios] = await Promise.all([
+        GBSupabase.from("procuras").select("*, profiles:user_id(nome, tipo, whatsapp)").order("created_at", { ascending: false }),
+        GBSupabase.from("anuncios").select("*, profiles:user_id(nome, tipo, whatsapp)").order("created_at", { ascending: false })
+      ]);
 
-      if (error) {
-        console.warn("Erro ao carregar procuras:", error.message);
-        return [];
-      }
-      return data || [];
+      const listaProc = (resProcuras.data || []).map(p => ({
+        ...p,
+        isFromAnuncios: false
+      }));
+
+      // Inclui anúncios publicados com 'Procuro'
+      const anunciosProc = (resAnuncios.data || [])
+        .filter(a => extrairIntencaoAnuncio(a) === "procuro")
+        .map(a => ({
+          id: a.id,
+          user_id: a.user_id,
+          titulo: a.titulo,
+          texto: a.texto,
+          valor_maximo: a.valor_a_partir,
+          pais: a.pais,
+          cep: a.cep,
+          cidade: a.cidade,
+          uf: a.uf,
+          bairro: a.bairro,
+          status: "ativo",
+          whatsapp_contato: a.whatsapp_contato,
+          created_at: a.created_at,
+          profiles: a.profiles,
+          isFromAnuncios: true,
+          rawAd: a
+        }));
+
+      const todas = [...listaProc, ...anunciosProc];
+      todas.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      return todas;
     } catch (e) {
       return [];
     }
@@ -289,6 +343,55 @@ window.GBAnuncios = (function () {
     return checked.join(" e ");
   }
 
+    function setupIntencaoSelector(container, isEdit = false) {
+    const prefix = isEdit ? "f-edit-" : "f-";
+    const nameLabel = $(`#${prefix}name-label`, container) || $(`label[for="${prefix}name"]`, container);
+    const nameInput = $(`#${prefix}name`, container);
+    const priceLabel = $(`#${prefix}price-label`, container) || $(`label[for="${prefix}price"]`, container);
+    const priceInput = $(`#${prefix}price`, container);
+    const priceHint = $(`#${prefix}price-hint`, container);
+    const submitBtn = isEdit ? $("#btn-save-edit", container) : $("#submit-btn", container);
+
+    const applyIntencaoUI = (val) => {
+      const isProc = val === "procuro";
+      if (nameLabel) nameLabel.textContent = isProc ? "O que você está procurando? *" : "Título do negócio ou serviço *";
+      if (nameInput) nameInput.placeholder = isProc ? "Ex: Procuro jardineiro, Compro Fusca antigo, Busco aula de violão" : "Ex: Padaria Central, Reformas do Zé, Aulas de Inglês";
+      if (priceLabel) priceLabel.textContent = isProc ? "Quanto você paga (até) *" : "Valor (obrigatório) *";
+      if (priceInput) priceInput.placeholder = isProc ? "Ex: Pago até R$ 200,00" : "Ex: A partir de R$ 45,00";
+      if (priceHint) priceHint.textContent = isProc ? "Valor máximo que você se dispõe a pagar" : 'No formato "a partir de R$ X"';
+      if (submitBtn && !isEdit) submitBtn.textContent = isProc ? "Publicar procura" : "Publicar anúncio";
+    };
+
+    const radioName = isEdit ? "edit-intencao" : "pub-intencao";
+    const attr = isEdit ? "data-edit-intencao" : "data-intencao";
+    const options = $$(`[${attr}]`, container);
+    const radios = $$(`input[name="${radioName}"]`, container);
+
+    const syncOptions = (val) => {
+      options.forEach(o => {
+        const oVal = o.getAttribute(attr);
+        const match = oVal === val;
+        o.classList.toggle("is-checked", match);
+        const r = o.querySelector("input[type=radio]");
+        if (r) r.checked = match;
+      });
+      applyIntencaoUI(val);
+    };
+
+    radios.forEach(radio => {
+      radio.addEventListener("change", () => syncOptions(radio.value));
+    });
+
+    options.forEach(opt => {
+      opt.addEventListener("click", (e) => {
+        const val = opt.getAttribute(attr);
+        syncOptions(val);
+      });
+    });
+
+    return syncOptions;
+  }
+
   /* ── 3. FORMULÁRIO DE ANÚNCIO (SEÇÃO #advertise) ───────── */
   function initAdvertiseForm() {
     const form = $("#pub-form");
@@ -301,6 +404,7 @@ window.GBAnuncios = (function () {
     }
 
     renderAdvertiseOrigin();
+    setupIntencaoSelector(form, false);
 
     // Input de fotos com preview
     const fileInput = $("#f-fotos");
@@ -450,7 +554,13 @@ window.GBAnuncios = (function () {
           }
         }
 
-        const outrasRedesArr = [{ tipo: "origem", valor: origemAnuncio }];
+        const intencaoRadio = $("input[name='pub-intencao']:checked", form);
+        const intencaoPub = intencaoRadio ? intencaoRadio.value : "ofereco";
+
+        const outrasRedesArr = [
+          { tipo: "origem", valor: origemAnuncio },
+          { tipo: "intencao", valor: intencaoPub }
+        ];
         if (outrasRedesTxt) outrasRedesArr.push({ tipo: "link", valor: outrasRedesTxt });
 
         // Salva no banco de dados
@@ -483,7 +593,7 @@ window.GBAnuncios = (function () {
 
         if (dbErr) throw dbErr;
 
-        msg("Anúncio publicado com sucesso!");
+        msg(intencaoPub === "procuro" ? "Procura publicada com sucesso no bairro!" : "Anúncio publicado com sucesso!");
         form.reset();
         selectedPhotos = [];
         advCepValidated = null;
@@ -792,13 +902,21 @@ window.GBAnuncios = (function () {
           ${myAds.map(a => {
             const foto = (a.fotos && a.fotos[0]) || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80";
             const origem = extrairOrigemAnuncio(a);
+            const intencao = extrairIntencaoAnuncio(a);
+            const badgeIntencao = intencao === "procuro" ? "💡 Procuro" : "🏷️ Ofereço";
+            const precoTexto = intencao === "procuro"
+              ? `Paga até: R$ ${Number(a.valor_a_partir).toFixed(2).replace(".", ",")}`
+              : `A partir de R$ ${Number(a.valor_a_partir).toFixed(2).replace(".", ",")}`;
             return `
               <div class="dash-item-card" data-id="${a.id}">
                 <img src="${foto}" alt="${a.titulo}" class="dash-item-img dash-clickable" style="cursor:pointer" title="Ver detalhes completos">
                 <div class="dash-item-body">
-                  <span class="dash-item-cat">${origem} &bull; ${a.categoria || 'Geral'}</span>
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+                    <span class="dash-item-cat">${badgeIntencao} &bull; ${origem} &bull; ${a.categoria || 'Geral'}</span>
+                    <span class="badge-op-tag ${intencao === 'procuro' ? 'badge-procura' : 'badge-venda'}">${intencao === 'procuro' ? '💡 Procura' : '🛍️ Oferta'}</span>
+                  </div>
                   <h4 class="dash-clickable" style="cursor:pointer" title="Ver detalhes completos">${a.titulo}</h4>
-                  <p class="dash-item-price">A partir de R$ ${Number(a.valor_a_partir).toFixed(2).replace(".", ",")}</p>
+                  <p class="dash-item-price">${precoTexto}</p>
                   <p class="dash-item-loc">📍 ${[a.bairro, a.cidade].filter(Boolean).join(", ") || a.cep}</p>
                   <div class="dash-item-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
                     <button type="button" class="btn btn-ghost btn-sm btn-view-my-ad" data-id="${a.id}">👁️ Ver Detalhes</button>
@@ -1580,7 +1698,7 @@ window.GBAnuncios = (function () {
           </div>
         `).join("");
 
-        $(".btn-del-existing-photo", existBox).forEach(b => {
+        $$(".btn-del-existing-photo", existBox).forEach(b => {
           b.addEventListener("click", () => {
             const idx = parseInt(b.dataset.idx);
             editExistingPhotos.splice(idx, 1);
@@ -1598,7 +1716,7 @@ window.GBAnuncios = (function () {
         </div>
       `).join("");
 
-      $(".btn-del-new-photo", newBox).forEach(b => {
+      $$(".btn-del-new-photo", newBox).forEach(b => {
         b.addEventListener("click", () => {
           const idx = parseInt(b.dataset.idx);
           editSelectedNewPhotos.splice(idx, 1);
@@ -1650,6 +1768,16 @@ window.GBAnuncios = (function () {
       cepStatus.textContent = "✓ " + (loc || "CEP cadastrado");
       cepStatus.dataset.kind = "ok";
     }
+
+    const editIntencao = extrairIntencaoAnuncio(ad);
+    const updateEditUI = setupIntencaoSelector(modal, true);
+    $$("[data-edit-intencao]", modal).forEach(o => {
+      const match = o.dataset.editIntencao === editIntencao;
+      o.classList.toggle("is-checked", match);
+      const r = o.querySelector("input[type=radio]");
+      if (r) r.checked = match;
+    });
+    updateEditUI(editIntencao);
 
     renderEditOrigin(ad);
     renderEditPhotos();
@@ -1787,8 +1915,14 @@ window.GBAnuncios = (function () {
           }
         }
 
+        const editIntencaoRadio = $("input[name='edit-intencao']:checked", form);
+        const editIntencao = editIntencaoRadio ? editIntencaoRadio.value : "ofereco";
+
         const fotosFinais = [...editExistingPhotos, ...uploadedUrls];
-        const outrasRedesArr = [{ tipo: "origem", valor: origemAnuncio }];
+        const outrasRedesArr = [
+          { tipo: "origem", valor: origemAnuncio },
+          { tipo: "intencao", valor: editIntencao }
+        ];
         if (outrasRedesTxt) outrasRedesArr.push({ tipo: "link", valor: outrasRedesTxt });
 
         const payload = {

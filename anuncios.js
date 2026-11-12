@@ -850,43 +850,265 @@ window.GBAnuncios = (function () {
     }
 
     if (tab === "oportunidades") {
-      box.innerHTML = `<div style="text-align:center;padding:30px;color:var(--t2)">Buscando pessoas procurando no seu bairro...</div>`;
-      const p = GBAuth.profile || {};
-      let query = GBSupabase.from("procuras").select("*, profiles:user_id(nome, whatsapp)").order("created_at", { ascending: false });
-      if (p.cidade) query = query.eq("cidade", p.cidade);
+      box.innerHTML = `<div style="text-align:center;padding:30px;color:var(--t2)">Carregando oportunidades no bairro...</div>`;
 
-      const { data, error } = await query;
-      if (error || !data || !data.length) {
+      // 1. Busca tanto os anúncios públicos quanto as procuras públicas de todos os moradores e empresas
+      const [resAnuncios, resProcuras] = await Promise.all([
+        GBSupabase.from("anuncios").select("*").order("created_at", { ascending: false }),
+        GBSupabase.from("procuras").select("*").order("created_at", { ascending: false })
+      ]);
+
+      const rawAds = resAnuncios.data || [];
+      const rawProcs = resProcuras.data || [];
+
+      const normStr = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+      const p = GBAuth.profile || {};
+      const userCidadeNorm = normStr(p.cidade);
+      const userBairroNorm = normStr(p.bairro);
+
+      // 2. Normaliza anúncios (Vendas / Ofertas)
+      const listaVendas = rawAds.map(a => {
+        const foto = (a.fotos && a.fotos[0]) || "";
+        const origem = extrairOrigemAnuncio(a);
+        const linkRedes = Array.isArray(a.outras_redes) ? (a.outras_redes.find(r => r && r.tipo === "link")?.valor || "") : "";
+        return {
+          tipo: "venda",
+          id: "adv-" + a.id,
+          rawId: a.id,
+          user_id: a.user_id,
+          titulo: a.titulo || a.texto || "Anúncio",
+          texto: a.texto || "",
+          categoria: a.categoria || "Geral",
+          origem: origem,
+          preco: a.valor_a_partir,
+          foto: foto,
+          bairro: a.bairro || "",
+          cidade: a.cidade || "",
+          uf: a.uf || "",
+          cep: a.cep || "",
+          pais: a.pais || "BR",
+          whatsapp: a.whatsapp_contato || "",
+          instagram: a.instagram || "",
+          website: linkRedes,
+          created_at: a.created_at || "",
+          rawAd: a
+        };
+      });
+
+      // 3. Normaliza procuras (Pedidos de compra dos moradores)
+      const listaProcuras = rawProcs.map(pr => {
+        return {
+          tipo: "procura",
+          id: "proc-" + pr.id,
+          rawId: pr.id,
+          user_id: pr.user_id,
+          titulo: pr.titulo || pr.texto || "Procura no bairro",
+          texto: pr.texto || "",
+          categoria: "Procura",
+          origem: "Morador",
+          precoMax: pr.valor_maximo,
+          bairro: pr.bairro || "",
+          cidade: pr.cidade || "",
+          uf: pr.uf || "",
+          cep: pr.cep || "",
+          pais: pr.pais || "BR",
+          whatsapp: pr.whatsapp_contato || "",
+          created_at: pr.created_at || "",
+          rawProc: pr
+        };
+      });
+
+      // Lista unificada
+      let todasOportunidades = [...listaVendas, ...listaProcuras];
+
+      // Ordenação: primeiro por proximidade (mesmo bairro -> mesma cidade -> demais), depois por data mais recente
+      todasOportunidades.sort((a, b) => {
+        let rankA = 3;
+        let rankB = 3;
+
+        if (userBairroNorm && normStr(a.bairro) === userBairroNorm) rankA = 1;
+        else if (userCidadeNorm && normStr(a.cidade) === userCidadeNorm) rankA = 2;
+
+        if (userBairroNorm && normStr(b.bairro) === userBairroNorm) rankB = 1;
+        else if (userCidadeNorm && normStr(b.cidade) === userCidadeNorm) rankB = 2;
+
+        if (rankA !== rankB) return rankA - rankB;
+        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      });
+
+      let opTypeFilter = "todas"; // "todas" | "vendas" | "procuras"
+      let opRegionFilter = "todas"; // "todas" | "minha-regiao"
+
+      function renderOportunidadesGrid() {
+        let filtradas = todasOportunidades;
+
+        if (opTypeFilter === "vendas") {
+          filtradas = filtradas.filter(it => it.tipo === "venda");
+        } else if (opTypeFilter === "procuras") {
+          filtradas = filtradas.filter(it => it.tipo === "procura");
+        }
+
+        if (opRegionFilter === "minha-regiao" && (userCidadeNorm || userBairroNorm)) {
+          filtradas = filtradas.filter(it => {
+            const cNorm = normStr(it.cidade);
+            const bNorm = normStr(it.bairro);
+            return (userBairroNorm && bNorm === userBairroNorm) || (userCidadeNorm && cNorm === userCidadeNorm);
+          });
+        }
+
+        const countTodas = todasOportunidades.length;
+        const countVendas = todasOportunidades.filter(it => it.tipo === "venda").length;
+        const countProcuras = todasOportunidades.filter(it => it.tipo === "procura").length;
+
+        const hasUserRegion = Boolean(p.cidade || p.bairro);
+        const regionLabel = [p.bairro, p.cidade].filter(Boolean).join(", ");
+
         box.innerHTML = `
-          <div class="dash-empty">
-            <p>Nenhuma procura aberta na sua região no momento.</p>
-            <span style="font-size:.8rem;color:var(--t3)">Quando um morador postar o que precisa, você verá aqui para fazer uma oferta!</span>
+          <div class="op-header-bar" style="margin-bottom:20px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+              <div class="op-subtabs" style="display:flex;gap:8px;flex-wrap:wrap">
+                <button type="button" class="btn btn-sm ${opTypeFilter === 'todas' ? 'btn-white' : 'btn-ghost'}" data-op-type="todas">
+                  Todas (${countTodas})
+                </button>
+                <button type="button" class="btn btn-sm ${opTypeFilter === 'vendas' ? 'btn-white' : 'btn-ghost'}" data-op-type="vendas">
+                  🛍️ Vendas / Ofertas (${countVendas})
+                </button>
+                <button type="button" class="btn btn-sm ${opTypeFilter === 'procuras' ? 'btn-white' : 'btn-ghost'}" data-op-type="procuras">
+                  💡 Procuras dos Moradores (${countProcuras})
+                </button>
+              </div>
+
+              ${hasUserRegion ? `
+                <div class="op-region-toggle" style="display:flex;align-items:center;gap:6px">
+                  <button type="button" class="btn btn-sm ${opRegionFilter === 'minha-regiao' ? 'btn-white' : 'btn-ghost'}" data-op-region="minha-regiao" title="Filtrar por ${regionLabel}">
+                    📍 ${regionLabel}
+                  </button>
+                  <button type="button" class="btn btn-sm ${opRegionFilter === 'todas' ? 'btn-white' : 'btn-ghost'}" data-op-region="todas" title="Ver todas as regiões">
+                    🌐 Todas as regiões
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+
+            <div style="font-size:.82rem;color:var(--t2)">
+              ${opTypeFilter === 'todas'
+                ? 'Exibindo vendas, ofertas locais e pedidos de compra dos moradores no bairro.'
+                : (opTypeFilter === 'vendas'
+                  ? 'Exibindo produtos, serviços e comércios anunciados por moradores e empresas.'
+                  : 'Exibindo o que os moradores estão procurando e quanto estão dispostos a pagar.')
+              }
+            </div>
           </div>
+
+          ${!filtradas.length ? `
+            <div class="dash-empty">
+              <p>Nenhuma oportunidade encontrada com os filtros selecionados.</p>
+              <button type="button" class="btn btn-white btn-sm btn-clear-op-filter" style="margin-top:12px">Ver todas as oportunidades</button>
+            </div>
+          ` : `
+            <div class="dash-grid">
+              ${filtradas.map(item => {
+                const isOwn = GBAuth.user && item.user_id === GBAuth.user.id;
+                const locStr = [item.bairro, item.cidade].filter(Boolean).join(", ") || (item.cep ? `CEP ${item.cep}` : "No bairro");
+
+                if (item.tipo === "venda") {
+                  const foto = item.foto || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80";
+                  return `
+                    <div class="dash-item-card op-card op-card-venda" data-id="${item.rawId}">
+                      <img src="${foto}" alt="${item.titulo}" class="dash-item-img dash-clickable-op-ad" style="cursor:pointer" title="Ver detalhes completos">
+                      <div class="dash-item-body">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+                          <span class="dash-item-cat">${item.origem} &bull; ${item.categoria}</span>
+                          <span class="badge-op-tag badge-venda">🛍️ Oferta</span>
+                        </div>
+                        <h4 class="dash-clickable-op-ad" style="cursor:pointer" title="Ver detalhes completos">${item.titulo}</h4>
+                        <p class="op-desc">${item.texto && item.texto !== item.titulo ? (item.texto.length > 90 ? item.texto.slice(0, 90) + '...' : item.texto) : ''}</p>
+                        <p class="dash-item-price">A partir de <strong>R$ ${item.preco !== null && item.preco !== undefined ? Number(item.preco).toFixed(2).replace('.', ',') : 'Sob consulta'}</strong></p>
+                        <p class="dash-item-loc">📍 ${locStr}</p>
+                        <div class="dash-item-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+                          <button type="button" class="btn btn-ghost btn-sm btn-view-op-ad" data-id="${item.rawId}">👁️ Ver Detalhes</button>
+                          ${item.whatsapp ? `
+                            <a href="https://wa.me/${item.whatsapp.replace(/\D/g, '')}?text=Olá,%20vi%20seu%20anúncio%20'${encodeURIComponent(item.titulo)}'%20no%20Guia%20de%20Bairro!" target="_blank" rel="noopener" class="btn btn-white btn-sm">💬 WhatsApp</a>
+                          ` : (item.instagram ? `
+                            <a href="https://instagram.com/${item.instagram.replace(/^@/, '')}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">📸 Instagram</a>
+                          ` : '')}
+                          ${isOwn ? `<span style="font-size:.72rem;color:var(--t3);align-self:center;margin-left:auto">(Seu anúncio)</span>` : ''}
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }
+
+                // Tipo Procura
+                return `
+                  <div class="dash-item-card op-card op-card-procura" data-id="${item.rawId}">
+                    <div class="dash-item-body">
+                      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+                        <span class="op-badge">💡 Procura no Bairro</span>
+                        <span class="badge-op-tag badge-procura">🙋 Morador quer comprar</span>
+                      </div>
+                      <h4>${item.titulo}</h4>
+                      <p class="op-desc">${item.texto && item.texto !== item.titulo ? item.texto : ''}</p>
+                      <p class="op-val">Cliente paga até: <strong>R$ ${Number(item.precoMax).toFixed(2).replace(".", ",")}</strong></p>
+                      <p class="dash-item-loc">📍 ${locStr}</p>
+                      <div class="dash-item-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+                        ${item.whatsapp ? `
+                          <a href="https://wa.me/${item.whatsapp.replace(/\D/g, '')}?text=Olá,%20vi%20sua%20procura%20de%20'${encodeURIComponent(item.titulo || item.texto)}'%20no%20Guia%20de%20Bairro%20e%20posso%20te%20atender!" target="_blank" rel="noopener" class="btn btn-white btn-sm">💬 Enviar proposta no WhatsApp</a>
+                        ` : `<span style="font-size:.8rem;color:var(--t3);padding:6px 0">Sem WhatsApp informado</span>`}
+                        ${isOwn ? `<span style="font-size:.72rem;color:var(--t3);align-self:center;margin-left:auto">(Sua procura)</span>` : ''}
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          `}
         `;
-        return;
+
+        // Eventos dos botões de tipo (Todas / Vendas / Procuras)
+        $$("[data-op-type]", box).forEach(btn => {
+          btn.addEventListener("click", () => {
+            opTypeFilter = btn.dataset.opType;
+            renderOportunidadesGrid();
+          });
+        });
+
+        // Eventos dos botões de região
+        $$("[data-op-region]", box).forEach(btn => {
+          btn.addEventListener("click", () => {
+            opRegionFilter = btn.dataset.opRegion;
+            renderOportunidadesGrid();
+          });
+        });
+
+        // Limpar filtros no empty state
+        $(".btn-clear-op-filter", box)?.addEventListener("click", () => {
+          opTypeFilter = "todas";
+          opRegionFilter = "todas";
+          renderOportunidadesGrid();
+        });
+
+        // Abertura do modal de detalhes do anúncio
+        const openOpAdDetails = (rawId) => {
+          const ad = rawAds.find(a => String(a.id) === String(rawId));
+          if (ad && typeof window.openModal === "function") {
+            window.openModal(formatAdForModal(ad));
+          }
+        };
+
+        $$(".btn-view-op-ad", box).forEach(btn => {
+          btn.addEventListener("click", () => openOpAdDetails(btn.dataset.id));
+        });
+
+        $$(".dash-clickable-op-ad", box).forEach(el => {
+          el.addEventListener("click", () => {
+            const card = el.closest(".dash-item-card");
+            if (card && card.dataset.id) openOpAdDetails(card.dataset.id);
+          });
+        });
       }
 
-      box.innerHTML = `
-        <div class="dash-grid">
-          ${data.map(item => {
-            const wpp = item.whatsapp_contato || (item.profiles && item.profiles.whatsapp);
-            return `
-              <div class="dash-item-card op-card">
-                <div class="dash-item-body">
-                  <span class="op-badge">💡 Oportunidade</span>
-                  <h4>${item.titulo || item.texto}</h4>
-                  <p class="op-desc">${item.texto !== item.titulo ? item.texto : ''}</p>
-                  <p class="op-val">Cliente paga até: <strong>R$ ${Number(item.valor_maximo).toFixed(2).replace(".", ",")}</strong></p>
-                  <p class="dash-item-loc">📍 ${[item.bairro, item.cidade].filter(Boolean).join(", ") || item.cep}</p>
-                  ${wpp ? `
-                    <a href="https://wa.me/${wpp.replace(/\D/g, '')}?text=Olá,%20vi%20sua%20procura%20de%20'${encodeURIComponent(item.titulo || item.texto)}'%20no%20Guia%20de%20Bairro%20e%20posso%20te%20atender!" target="_blank" rel="noopener" class="btn btn-white btn-sm" style="margin-top:10px">Enviar proposta no WhatsApp</a>
-                  ` : ''}
-                </div>
-              </div>
-            `;
-          }).join("")}
-        </div>
-      `;
+      renderOportunidadesGrid();
     }
 
     if (tab === "minhas-procuras") {

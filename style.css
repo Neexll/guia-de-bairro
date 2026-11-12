@@ -3406,6 +3406,39 @@ body.auth-open {
   border-color: rgba(63, 178, 127, .3);
 }
 
+.op-card-venda {
+  border-color: var(--b1);
+  background: var(--s1);
+}
+
+.op-card-procura {
+  border-color: rgba(63, 178, 127, .35);
+  background: linear-gradient(180deg, rgba(63, 178, 127, .04) 0%, var(--s1) 120px);
+}
+
+.badge-op-tag {
+  font-size: .68rem;
+  padding: 3px 8px;
+  border-radius: var(--pill);
+  font-weight: 500;
+  letter-spacing: .02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-venda {
+  background: rgba(255, 255, 255, .08);
+  color: var(--t1);
+  border: 1px solid var(--b1);
+}
+
+.badge-procura {
+  background: rgba(63, 178, 127, .12);
+  color: #3fb27f;
+  border: 1px solid rgba(63, 178, 127, .25);
+}
+
 .op-badge {
   font-size: .72rem;
   font-weight: 600;

@@ -7,7 +7,7 @@
   <title>Guia de Bairros</title>
   <meta name="description"
     content="Encontre restaurantes, lojas e serviços no seu bairro. Anuncie seu negócio gratuitamente.">
-  <link rel="stylesheet" href="style.css?v=20261104">
+  <link rel="stylesheet" href="style.css?v=20261111">
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23000'/><text x='5' y='24' font-family='Inter,sans-serif' font-size='22' font-weight='500' fill='%23fff'>G</text></svg>">
 </head>
@@ -669,14 +669,130 @@
       </form>
     </div>
   </div>
+  <!-- MODAL DE EDIÇÃO DE ANÚNCIO (Meus Anúncios) -->
+  <div id="edit-anuncio-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-anuncio-title">
+    <div class="auth-card" style="max-width:680px;max-height:calc(100vh - 32px);overflow-y:auto;padding:28px">
+      <button class="menu-close auth-close" id="edit-anuncio-close" type="button" aria-label="Fechar">&times;</button>
+      <h2 id="edit-anuncio-title" class="auth-title">Editar Anúncio</h2>
+      <p style="font-size:.85rem;color:var(--t2);margin-bottom:18px">Atualize as informações, fotos, preço ou contatos do seu anúncio.</p>
+
+      <form id="edit-anuncio-form" novalidate>
+        <input type="hidden" id="f-edit-id">
+
+        <div class="f-grid">
+          <!-- Tipificação (Origem) -->
+          <div class="f-field f-col2" id="f-edit-origin-wrap">
+            <label class="f-label">Tipificação do anúncio *</label>
+            <div id="f-edit-origin-box" class="pub-origin-box"></div>
+          </div>
+
+          <!-- Título -->
+          <div class="f-field f-col2">
+            <label class="f-label" for="f-edit-name">Título do negócio ou serviço *</label>
+            <input class="f-input" id="f-edit-name" type="text" required placeholder="Ex: Padaria Central, Reformas do Zé">
+          </div>
+
+          <!-- Categoria -->
+          <div class="f-field">
+            <label class="f-label" for="f-edit-category">Categoria *</label>
+            <select class="f-input" id="f-edit-category" required>
+              <option value="">Selecione</option>
+              <option>Alimentação</option>
+              <option>Beleza</option>
+              <option>Saúde</option>
+              <option>Tecnologia</option>
+              <option>Moda</option>
+              <option>Educação</option>
+              <option>Pets</option>
+              <option>Lazer</option>
+              <option>Mercado</option>
+              <option>Serviços</option>
+              <option>Outro</option>
+            </select>
+          </div>
+
+          <!-- Valor a partir de -->
+          <div class="f-field">
+            <label class="f-label" for="f-edit-price">Valor (obrigatório) *</label>
+            <input class="f-input" id="f-edit-price" type="text" required placeholder="Ex: A partir de R$ 45,00">
+            <span class="f-hint">No formato "a partir de R$ X"</span>
+          </div>
+
+          <!-- CEP do anúncio -->
+          <div class="f-field f-col2 f-cep-highlight">
+            <label class="f-label">Em qual CEP você quer cadastrar o anúncio? *</label>
+            <div class="auth-row" style="margin-top:6px">
+              <select class="f-input" id="f-edit-pais"></select>
+              <input class="f-input" id="f-edit-cep" type="text" placeholder="CEP do anúncio">
+            </div>
+            <p id="f-edit-cep-status" class="auth-cep-status"></p>
+          </div>
+
+          <!-- Fotos existentes e novas -->
+          <div class="f-field f-col2">
+            <label class="f-label">Fotos do anúncio</label>
+            <div style="font-size:.74rem;color:var(--t2);margin-top:2px">Fotos atuais (clique no ✕ para remover):</div>
+            <div id="f-edit-fotos-existentes" class="fotos-preview-grid" style="margin-bottom:10px"></div>
+            <div style="font-size:.74rem;color:var(--t2)">Adicionar novas fotos:</div>
+            <input type="file" id="f-edit-fotos" accept="image/jpeg,image/png,image/webp" multiple class="f-input" style="padding:8px">
+            <div id="f-edit-fotos-novas-preview" class="fotos-preview-grid"></div>
+            <span class="f-hint">Formatos: JPG, PNG, WebP (máx. 5MB cada).</span>
+          </div>
+
+          <!-- Vídeo link -->
+          <div class="f-field f-col2">
+            <label class="f-label" for="f-edit-video">Vídeo (link)</label>
+            <input class="f-input" id="f-edit-video" type="url" placeholder="https://youtube.com/watch?v=... ou link do Instagram Reel">
+          </div>
+
+          <!-- Meios de Contato -->
+          <div class="f-field f-col2" style="margin-top:4px">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+              <label class="f-label" style="font-weight:600;color:var(--t1)">Meios de contato *</label>
+              <span class="f-hint" style="color:#f59e0b;font-weight:600;margin:0">* Informe pelo menos 1 (WhatsApp, Instagram ou Site/Rede)</span>
+            </div>
+          </div>
+
+          <div class="f-field">
+            <label class="f-label" for="f-edit-whatsapp">WhatsApp para contato</label>
+            <input class="f-input" id="f-edit-whatsapp" type="tel" placeholder="(11) 90000-0000">
+          </div>
+
+          <div class="f-field">
+            <label class="f-label" for="f-edit-instagram">Instagram</label>
+            <input class="f-input" id="f-edit-instagram" type="text" placeholder="@seunegocio">
+          </div>
+
+          <div class="f-field f-col2">
+            <label class="f-label" for="f-edit-outras-redes">Outras redes ou website</label>
+            <input class="f-input" id="f-edit-outras-redes" type="text" placeholder="Ex: facebook.com/loja ou www.meusite.com.br">
+          </div>
+
+          <!-- Descrição / Texto -->
+          <div class="f-field f-col2">
+            <label class="f-label" for="f-edit-desc">Descrição / Texto do anúncio * (mínimo 15 caracteres)</label>
+            <textarea class="f-input" id="f-edit-desc" required rows="4" minlength="15"
+              placeholder="Descreva detalhadamente o produto, serviço, diferenciais, formas de atendimento e entrega."></textarea>
+          </div>
+
+          <div id="edit-form-error" class="auth-error f-col2"></div>
+
+          <div class="f-field f-col2 f-submit" style="display:flex;gap:12px;margin-top:14px">
+            <button type="button" class="btn btn-ghost btn-lg" id="btn-cancel-edit" style="flex:1;justify-content:center">Cancelar</button>
+            <button type="submit" class="btn btn-white btn-lg" id="btn-save-edit" style="flex:2;justify-content:center">Salvar alterações</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20261104"></script>
-  <script src="cep.js?v=20261104"></script>
-  <script src="localizacao.js?v=20261104"></script>
-  <script src="anuncios.js?v=20261104"></script>
-  <script src="app.js?v=20261104"></script>
-  <script src="auth.js?v=20261104"></script>
+  <script src="config.js?v=20261111"></script>
+  <script src="cep.js?v=20261111"></script>
+  <script src="localizacao.js?v=20261111"></script>
+  <script src="anuncios.js?v=20261111"></script>
+  <script src="app.js?v=20261111"></script>
+  <script src="auth.js?v=20261111"></script>
 </body>
 
 </html>

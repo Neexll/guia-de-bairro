@@ -739,6 +739,27 @@ function renderListings() {
          </div>`
       : "";
 
+    const cleanPhone = String(b.phone || b.whatsapp || "").replace(/\D/g, "");
+    const waUrl = cleanPhone ? (cleanPhone.startsWith("55") ? "https://wa.me/" + cleanPhone : "https://wa.me/55" + cleanPhone) : "";
+    const cleanInsta = String(b.instagram || "").trim().replace(/^@/, "");
+    const instaUrl = cleanInsta ? "https://instagram.com/" + cleanInsta : "";
+    const rawWeb = b.website || b.outrasRedes || "";
+    const webUrl = rawWeb ? (rawWeb.startsWith("http") ? rawWeb : "https://" + rawWeb) : "";
+
+    const contactPillHtml = cleanPhone ? `
+      <a href="${waUrl}" target="_blank" rel="noopener" class="card-contact-btn btn-card-wpp" title="Conversar no WhatsApp" onclick="event.stopPropagation()">
+        💬 WhatsApp
+      </a>
+    ` : (cleanInsta ? `
+      <a href="${instaUrl}" target="_blank" rel="noopener" class="card-contact-btn btn-card-insta" title="Instagram" onclick="event.stopPropagation()">
+        📸 Instagram
+      </a>
+    ` : (webUrl ? `
+      <a href="${webUrl}" target="_blank" rel="noopener" class="card-contact-btn btn-card-web" title="Website / Rede" onclick="event.stopPropagation()">
+        🌐 Site
+      </a>
+    ` : ""));
+
     card.innerHTML = `
       <div class="biz-img">
         ${carouselHtml(imagesOf(b), b.name)}
@@ -777,6 +798,12 @@ function renderListings() {
           </span>
           <span class="biz-clicks-text">${formatViews(b.views)} visitas</span>
         </div>
+      </div>
+      <div class="biz-card-footer" style="padding:10px 16px 12px;border-top:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <span style="font-size:.76rem;color:var(--t2);display:inline-flex;align-items:center;gap:4px">
+          👁️ Ver detalhes completos
+        </span>
+        ${contactPillHtml}
       </div>`;
     card.addEventListener("click", () => {
       registerCardClick(b, card);
@@ -810,26 +837,44 @@ function openModal(b) {
   const ov = $("#modal-overlay");
   const m = $(".modal", ov);
 
+  const cleanPhone = String(b.phone || b.whatsapp || "").replace(/\D/g, "");
+  const waUrl = cleanPhone ? (cleanPhone.startsWith("55") ? "https://wa.me/" + cleanPhone : "https://wa.me/55" + cleanPhone) : "";
+  const cleanInsta = String(b.instagram || "").trim().replace(/^@/, "");
+  const instaUrl = cleanInsta ? "https://instagram.com/" + cleanInsta : "";
+  const rawWeb = b.website || b.outrasRedes || "";
+  const webUrl = rawWeb ? (rawWeb.startsWith("http") ? rawWeb : "https://" + rawWeb) : "";
+  const rawVideo = b.videoUrl || "";
+  const videoUrl = rawVideo ? (rawVideo.startsWith("http") ? rawVideo : "https://" + rawVideo) : "";
+  const origem = b.origemAnuncio || "De Morador";
+
   const modalCatLabel = b.isOffer
     ? `Ofereço &bull; ${b.category} &bull; ${b.offerType || "Venda no Bairro"}`
-    : b.category;
+    : `🏷️ ${origem} &bull; ${b.category || "Geral"}`;
 
-  const priceBoxHtml = b.isOffer && b.price
+  const priceBoxHtml = b.price
     ? `<div class="modal-price-box">${b.price}</div>`
     : "";
 
-  const offerInfoHtml = b.isOffer
-    ? `
-      <div class="modal-info-item">
-        <span class="modal-info-label">Publicação</span>
-        <span class="modal-info-val">Publicado ${formatTimeAgo(b.publishedAt)}</span>
-      </div>
-      ${b.price ? `
-      <div class="modal-info-item">
-        <span class="modal-info-label">Valor</span>
-        <span class="modal-info-val" style="color:#34d399;font-weight:600">${b.price}</span>
-      </div>` : ""}
-    ` : "";
+  const timeAgoHtml = b.publishedAt ? formatTimeAgo(b.publishedAt) : "recentemente";
+  const fullDateHtml = b.publishedAt ? formatFullDate(b.publishedAt) : "";
+
+  const wppDisplay = cleanPhone
+    ? `<span style="color:#25d366;font-weight:600">${b.phone || b.whatsapp} (Disponível)</span>`
+    : `<span style="color:var(--t3)">Não informado</span>`;
+
+  const instaDisplay = cleanInsta
+    ? `<a href="${instaUrl}" target="_blank" rel="noopener" style="color:#e1306c;font-weight:500;text-decoration:underline">@${cleanInsta}</a>`
+    : `<span style="color:var(--t3)">Não informado</span>`;
+
+  const siteDisplay = webUrl
+    ? `<a href="${webUrl}" target="_blank" rel="noopener" style="color:var(--t1);text-decoration:underline;word-break:break-all">${rawWeb}</a>`
+    : `<span style="color:var(--t3)">Não informado</span>`;
+
+  const videoDisplay = videoUrl
+    ? `<a href="${videoUrl}" target="_blank" rel="noopener" style="color:#ef4444;font-weight:500;text-decoration:underline">▶ Assistir vídeo demonstrativo</a>`
+    : `<span style="color:var(--t3)">Não informado</span>`;
+
+  const isOwner = Boolean(window.GBAuth && GBAuth.user && b.userId === GBAuth.user.id);
 
   m.innerHTML = `
     <div class="modal-img" style="position:relative">
@@ -841,41 +886,93 @@ function openModal(b) {
       <p class="modal-cat">${modalCatLabel}</p>
       <h2 class="modal-name">${b.name}</h2>
       ${priceBoxHtml}
-      <div class="modal-stars-row">
+      <div class="modal-stars-row" style="flex-wrap:wrap">
         <span class="modal-stars">${starsText(b.rating || 5.0)}</span>
         <span class="modal-reviews">&middot; ${b.reviews || 1} avaliações</span>
+        ${b.publishedAt ? `<span style="font-size:.72rem;color:var(--t3);margin-left:auto">Publicado ${timeAgoHtml}${fullDateHtml ? ' (' + fullDateHtml + ')' : ''}</span>` : ""}
       </div>
-      <p class="modal-desc">${b.desc}</p>
+
+      <!-- Descrição completa e destacada do produto ou serviço -->
+      <div class="modal-desc-box">
+        <div style="font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-bottom:8px">Descrição completa do anúncio</div>
+        <div style="white-space:pre-wrap;line-height:1.65;font-size:.9rem;color:var(--t1)">${b.desc ? b.desc : '<span style="color:var(--t3)">Sem descrição detalhada informada.</span>'}</div>
+      </div>
+
+      <!-- Grade completa com todas as informações (preenchidas ou não) -->
       <div class="modal-info">
-        ${offerInfoHtml}
+        <div class="modal-info-item">
+          <span class="modal-info-label">Tipo de Anúncio</span>
+          <span class="modal-info-val">🏷️ ${origem}</span>
+        </div>
+        <div class="modal-info-item">
+          <span class="modal-info-label">Categoria</span>
+          <span class="modal-info-val">${b.category || "Geral"}</span>
+        </div>
+        <div class="modal-info-item">
+          <span class="modal-info-label">Valor / Preço</span>
+          <span class="modal-info-val" style="color:#34d399;font-weight:600">${b.price || "A combinar / Sob consulta"}</span>
+        </div>
+        <div class="modal-info-item">
+          <span class="modal-info-label">Localização</span>
+          <span class="modal-info-val">📍 ${b.address || (b.cep ? 'CEP ' + b.cep : 'Não informado')}</span>
+        </div>
         <div class="modal-info-item">
           <span class="modal-info-label">Distância</span>
           <span class="modal-info-val">${(window.GBLocal && GBLocal.rotulo(b)) || b.distance || "Perto de você"}</span>
         </div>
         <div class="modal-info-item">
           <span class="modal-info-label">Visitas</span>
-          <span class="modal-info-val">${(b.views || 0).toLocaleString('pt-BR')} cliques no card</span>
+          <span class="modal-info-val">${(b.views || 0).toLocaleString('pt-BR')} cliques</span>
         </div>
         <div class="modal-info-item">
-          <span class="modal-info-label">Endereço / Retirada</span>
-          <span class="modal-info-val">${b.address}</span>
+          <span class="modal-info-label">WhatsApp</span>
+          <span class="modal-info-val">${wppDisplay}</span>
         </div>
         <div class="modal-info-item">
-          <span class="modal-info-label">Telefone / WhatsApp</span>
-          <span class="modal-info-val">${b.phone}</span>
+          <span class="modal-info-label">Instagram</span>
+          <span class="modal-info-val">${instaDisplay}</span>
         </div>
         <div class="modal-info-item">
-          <span class="modal-info-label">Horário</span>
-          <span class="modal-info-val">${b.hours || "A combinar"}</span>
+          <span class="modal-info-label">Website / Outra Rede</span>
+          <span class="modal-info-val">${siteDisplay}</span>
+        </div>
+        <div class="modal-info-item">
+          <span class="modal-info-label">Vídeo demonstrativo</span>
+          <span class="modal-info-val">${videoDisplay}</span>
         </div>
       </div>
+
       <div class="modal-tags">${(b.tags || []).map(t => `<span class="tag">${t}</span>`).join("")}</div>
-      <div class="modal-actions">
-        <a href="tel:${b.phone.replace(/\D/g, "")}" class="btn btn-white">Ligar</a>
-        <a href="https://wa.me/55${b.phone.replace(/\D/g, "")}" target="_blank" rel="noopener" class="btn btn-dark">
-          ${b.isOffer ? "Negociar no WhatsApp" : "WhatsApp"}
-        </a>
-        <button class="btn btn-ghost" id="copy-addr">Copiar endereço</button>
+
+      <!-- Ações de contato e navegação -->
+      <div class="modal-actions" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        ${cleanPhone ? `
+          <a href="${waUrl}" target="_blank" rel="noopener" class="btn btn-white" style="background:#25d366;color:#fff;border-color:#25d366">
+            💬 Conversar no WhatsApp
+          </a>
+          <a href="tel:${cleanPhone}" class="btn btn-white">
+            📞 Ligar
+          </a>
+        ` : ""}
+        ${cleanInsta ? `
+          <a href="${instaUrl}" target="_blank" rel="noopener" class="btn btn-ghost">
+            📸 Abrir Instagram
+          </a>
+        ` : ""}
+        ${webUrl ? `
+          <a href="${webUrl}" target="_blank" rel="noopener" class="btn btn-ghost">
+            🌐 Acessar Site / Rede
+          </a>
+        ` : ""}
+        ${videoUrl ? `
+          <a href="${videoUrl}" target="_blank" rel="noopener" class="btn btn-ghost">
+            ▶ Assistir Vídeo
+          </a>
+        ` : ""}
+        ${b.address ? `<button type="button" class="btn btn-ghost" id="copy-addr">📋 Copiar endereço</button>` : ""}
+        ${isOwner ? `
+          <button type="button" class="btn btn-white" id="modal-edit-btn" style="margin-left:auto">✏️ Editar este anúncio</button>
+        ` : ""}
       </div>
     </div>`;
 
@@ -889,8 +986,17 @@ function openModal(b) {
   $("#copy-addr")?.addEventListener("click", () => {
     navigator.clipboard.writeText(b.address).then(() => toast("Endereço copiado"));
   });
+  $("#modal-edit-btn")?.addEventListener("click", () => {
+    closeModal();
+    if (window.GBAnuncios && typeof GBAnuncios.openEditModal === "function") {
+      GBAnuncios.openEditModal(b.rawAd || b);
+    }
+  });
   ov.onclick = e => { if (e.target === ov) closeModal(); };
 }
+
+window.openModal = openModal;
+window.closeModal = closeModal;
 
 function closeModal() {
   $("#modal-overlay").classList.remove("open");

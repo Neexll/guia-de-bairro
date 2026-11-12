@@ -257,6 +257,7 @@ window.GBLocal = (function () {
     injetarPreencher("#auth-pais", "#auth-cep", "#auth-cep-status");
     injetarPreencher("#f-pub-pais", "#f-pub-cep", "#f-pub-cep-status");
     injetarPreencher("#f-proc-pais", "#f-proc-cep", "#f-proc-cep-status");
+    injetarPreencher("#f-edit-pais", "#f-edit-cep", "#f-edit-cep-status");
     render();
 
     // Retoma sozinho se o usuário já ativou antes e a permissão continua concedida

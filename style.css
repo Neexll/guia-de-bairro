@@ -2046,6 +2046,63 @@ textarea.f-input {
   gap: 8px;
   flex-wrap: wrap
 }
+.modal-desc-box {
+  margin: 16px 0 20px;
+  padding: 18px;
+  background: var(--s2);
+  border: 1px solid var(--b1);
+  border-radius: var(--r-md);
+  white-space: pre-wrap;
+  line-height: 1.65;
+  font-size: .88rem;
+  color: var(--t1);
+  word-break: break-word;
+}
+
+.card-contact-btn {
+  font-size: .72rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: var(--pill);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all .15s ease;
+  line-height: 1.2;
+}
+
+.btn-card-wpp {
+  background: rgba(37, 211, 102, .15);
+  color: #25d366;
+  border: 1px solid rgba(37, 211, 102, .3);
+}
+
+.btn-card-wpp:hover {
+  background: #25d366;
+  color: #fff;
+}
+
+.btn-card-insta {
+  background: rgba(225, 48, 108, .15);
+  color: #e1306c;
+  border: 1px solid rgba(225, 48, 108, .3);
+}
+
+.btn-card-insta:hover {
+  background: #e1306c;
+  color: #fff;
+}
+
+.btn-card-web {
+  background: var(--s2);
+  color: var(--t1);
+  border: 1px solid var(--b1);
+}
+
+.btn-card-web:hover {
+  background: var(--s3);
+}
 
 /* ─────────────────────────────────────────────────────────
    FOOTER
@@ -2576,7 +2633,8 @@ button.mobile-nav-link {
 }
 
 #auth-overlay,
-#procura-modal {
+#procura-modal,
+#edit-anuncio-modal {
   position: fixed;
   inset: 0;
   z-index: 950;
@@ -2593,7 +2651,8 @@ button.mobile-nav-link {
 }
 
 #auth-overlay.open,
-#procura-modal.open {
+#procura-modal.open,
+#edit-anuncio-modal.open {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -2615,7 +2674,8 @@ button.mobile-nav-link {
 }
 
 #auth-overlay.open .auth-card,
-#procura-modal.open .auth-card {
+#procura-modal.open .auth-card,
+#edit-anuncio-modal.open .auth-card {
   transform: none;
 }
 

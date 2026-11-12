@@ -38,6 +38,47 @@ window.GBAnuncios = (function () {
     return parseFloat(s);
   }
 
+
+  function formatAdForModal(a) {
+    const fotos = (a.fotos && a.fotos.length) ? a.fotos : [];
+    const principal = fotos[0] || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80";
+    const origem = extrairOrigemAnuncio(a);
+    const linkRedes = Array.isArray(a.outras_redes) ? (a.outras_redes.find(r => r && r.tipo === "link")?.valor || "") : "";
+    return {
+      id: "sb-" + a.id,
+      dbId: a.id,
+      userId: a.user_id,
+      name: a.titulo || (a.texto ? a.texto.slice(0, 40) + "..." : "Anúncio"),
+      category: a.categoria || "Serviços",
+      origemAnuncio: origem,
+      desc: a.texto,
+      price: a.valor_a_partir !== null ? `A partir de R$ ${Number(a.valor_a_partir).toFixed(2).replace(".", ",")}` : undefined,
+      address: [a.bairro, a.cidade, a.uf].filter(Boolean).join(", ") || `CEP ${a.cep}`,
+      cep: a.cep,
+      bairro: a.bairro,
+      cidade: a.cidade,
+      uf: a.uf,
+      pais: a.pais,
+      phone: a.whatsapp_contato || (a.profiles && a.profiles.whatsapp) || "",
+      whatsapp: a.whatsapp_contato || (a.profiles && a.profiles.whatsapp) || "",
+      instagram: a.instagram || "",
+      website: linkRedes,
+      outrasRedes: linkRedes,
+      videoUrl: a.video_url || "",
+      image: principal,
+      images: fotos.length ? fotos : [principal],
+      rating: 5.0,
+      reviews: 1,
+      views: 1,
+      distance: a.bairro ? `${a.bairro}` : "No bairro",
+      tags: [origem, a.categoria || "Serviços"],
+      featured: true,
+      isUserPost: true,
+      publishedAt: a.created_at,
+      rawAd: a
+    };
+  }
+
   function extrairOrigemAnuncio(a) {
     if (Array.isArray(a.outras_redes)) {
       const item = a.outras_redes.find(r => r && r.tipo === "origem" && r.valor);
@@ -66,10 +107,12 @@ window.GBAnuncios = (function () {
         const fotos = (a.fotos && a.fotos.length) ? a.fotos : [];
         const principal = fotos[0] || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80";
         const origem = extrairOrigemAnuncio(a);
+        const linkRedes = Array.isArray(a.outras_redes) ? (a.outras_redes.find(r => r && r.tipo === "link")?.valor || "") : "";
         return {
           id: "sb-" + a.id,
           dbId: a.id,
           userId: a.user_id,
+          authorName: (a.profiles && a.profiles.nome) || "",
           name: a.titulo || (a.texto ? a.texto.slice(0, 40) + "..." : "Anúncio"),
           category: a.categoria || "Serviços",
           origemAnuncio: origem,
@@ -82,7 +125,10 @@ window.GBAnuncios = (function () {
           uf: a.uf,
           pais: a.pais,
           phone: a.whatsapp_contato || (a.profiles && a.profiles.whatsapp) || "",
+          whatsapp: a.whatsapp_contato || (a.profiles && a.profiles.whatsapp) || "",
           instagram: a.instagram || "",
+          website: linkRedes,
+          outrasRedes: linkRedes,
           videoUrl: a.video_url || "",
           image: principal,
           images: fotos.length ? fotos : [principal],
@@ -93,7 +139,8 @@ window.GBAnuncios = (function () {
           tags: [origem, a.categoria || "Serviços"],
           featured: true,
           isUserPost: true,
-          publishedAt: a.created_at
+          publishedAt: a.created_at,
+          rawAd: a
         };
       });
 
@@ -361,7 +408,16 @@ window.GBAnuncios = (function () {
       if (!titulo) { msg("Informe o título do negócio ou serviço."); $("#f-name")?.focus(); return; }
       if (!categoria) { msg("Selecione uma categoria."); $("#f-category")?.focus(); return; }
       if (isNaN(preco) || preco < 0) { msg("Informe um valor válido (ex: 45,00)."); $("#f-price")?.focus(); return; }
-      if (texto.length < 5) { msg("Informe a descrição do anúncio (mínimo 5 caracteres)."); $("#f-desc")?.focus(); return; }
+      if (texto.length < 15) {
+        msg("Informe a descrição do anúncio com no mínimo 15 caracteres.");
+        $("#f-desc")?.focus();
+        return;
+      }
+      if (!whatsappContato && !instagram && !outrasRedesTxt) {
+        msg("Informe pelo menos um meio de contato (WhatsApp, Instagram ou Site/Outra rede) para que os clientes possam falar com você.");
+        $("#f-pub-whatsapp")?.focus();
+        return;
+      }
 
       const cepValido = advCepValidated || await validarAdvCep();
       if (!cepValido) {
@@ -727,24 +783,27 @@ window.GBAnuncios = (function () {
         return;
       }
 
+      const myAds = data || [];
       box.innerHTML = `
         <div style="margin-bottom:16px;text-align:right">
           <a href="#anunciar" data-page="anunciar" class="btn btn-white btn-lg">Criar Novo Anúncio</a>
         </div>
         <div class="dash-grid">
-          ${data.map(a => {
+          ${myAds.map(a => {
             const foto = (a.fotos && a.fotos[0]) || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80";
             const origem = extrairOrigemAnuncio(a);
             return `
-              <div class="dash-item-card">
-                <img src="${foto}" alt="${a.titulo}" class="dash-item-img">
+              <div class="dash-item-card" data-id="${a.id}">
+                <img src="${foto}" alt="${a.titulo}" class="dash-item-img dash-clickable" style="cursor:pointer" title="Ver detalhes completos">
                 <div class="dash-item-body">
                   <span class="dash-item-cat">${origem} &bull; ${a.categoria || 'Geral'}</span>
-                  <h4>${a.titulo}</h4>
+                  <h4 class="dash-clickable" style="cursor:pointer" title="Ver detalhes completos">${a.titulo}</h4>
                   <p class="dash-item-price">A partir de R$ ${Number(a.valor_a_partir).toFixed(2).replace(".", ",")}</p>
                   <p class="dash-item-loc">📍 ${[a.bairro, a.cidade].filter(Boolean).join(", ") || a.cep}</p>
-                  <div class="dash-item-actions">
-                    <button type="button" class="btn btn-ghost btn-sm btn-del-anuncio" data-id="${a.id}">Excluir</button>
+                  <div class="dash-item-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+                    <button type="button" class="btn btn-ghost btn-sm btn-view-my-ad" data-id="${a.id}">👁️ Ver Detalhes</button>
+                    <button type="button" class="btn btn-white btn-sm btn-edit-anuncio" data-id="${a.id}">✏️ Editar</button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-del-anuncio" data-id="${a.id}" style="color:#e5675a">Excluir</button>
                   </div>
                 </div>
               </div>
@@ -753,13 +812,38 @@ window.GBAnuncios = (function () {
         </div>
       `;
 
-      $$(".btn-del-anuncio", box).forEach(b => {
+      const openAdDetails = (id) => {
+        const ad = myAds.find(item => String(item.id) === String(id));
+        if (ad && typeof window.openModal === "function") {
+          window.openModal(formatAdForModal(ad));
+        }
+      };
+
+      $(".btn-view-my-ad", box).forEach(b => {
+        b.addEventListener("click", () => openAdDetails(b.dataset.id));
+      });
+
+      $(".dash-clickable", box).forEach(el => {
+        el.addEventListener("click", () => {
+          const card = el.closest(".dash-item-card");
+          if (card && card.dataset.id) openAdDetails(card.dataset.id);
+        });
+      });
+
+      $(".btn-edit-anuncio", box).forEach(b => {
+        b.addEventListener("click", () => {
+          const ad = myAds.find(item => String(item.id) === String(b.dataset.id));
+          if (ad) openEditModal(ad);
+        });
+      });
+
+      $(".btn-del-anuncio", box).forEach(b => {
         b.addEventListener("click", async () => {
-          if (!confirm("Tem certeza que deseja apagar este anúncio?")) return;
+          if (!confirm("Tem certeza que deseja apagar este anúncio permanentemente?")) return;
           const id = b.dataset.id;
           await GBSupabase.from("anuncios").delete().eq("id", id);
-          msg("Anúncio excluído.");
-          carregarAnuncios();
+          msg("Anúncio excluído com sucesso.");
+          await carregarAnuncios();
           renderDashTab("meus-anuncios");
         });
       });
@@ -1172,10 +1256,364 @@ window.GBAnuncios = (function () {
     }
   }
 
+
+  /* ── 9. MODAL DE EDIÇÃO DE ANÚNCIO (MEUS ANÚNCIOS) ──────── */
+  let editSelectedNewPhotos = [];
+  let editExistingPhotos = [];
+  let editCepValidated = null;
+
+  function getEditAdvertiseOrigin() {
+    const pTipo = getPerfilTipo();
+    if (pTipo === "morador") return "De Morador";
+    if (pTipo === "empresa") return "De Empresa";
+    const checked = $('#f-edit-origin-box input[name="edit-origin"]:checked').map(c => c.value);
+    if (!checked.length) return "De Morador";
+    return checked.join(" e ");
+  }
+
+  function renderEditOrigin(ad) {
+    const box = $("#f-edit-origin-box");
+    if (!box) return;
+
+    const pTipo = getPerfilTipo();
+    const currentOrigin = extrairOrigemAnuncio(ad);
+
+    if (pTipo === "morador") {
+      box.innerHTML = `
+        <div class="pub-origin-grid">
+          <label class="pub-origin-option is-checked is-readonly">
+            <input type="checkbox" name="edit-origin" value="De Morador" checked disabled>
+            <span class="pub-origin-check" aria-hidden="true">✓</span>
+            <span class="pub-origin-info">
+              <strong>De Morador</strong>
+              <small>Anunciante Morador (Pessoa Física) — fixo conforme seu perfil</small>
+            </span>
+          </label>
+        </div>
+      `;
+    } else if (pTipo === "empresa") {
+      box.innerHTML = `
+        <div class="pub-origin-grid">
+          <label class="pub-origin-option is-checked is-readonly">
+            <input type="checkbox" name="edit-origin" value="De Empresa" checked disabled>
+            <span class="pub-origin-check" aria-hidden="true">✓</span>
+            <span class="pub-origin-info">
+              <strong>De Empresa</strong>
+              <small>Anunciante Empresa (Pessoa Jurídica) — fixo conforme seu perfil</small>
+            </span>
+          </label>
+        </div>
+      `;
+    } else {
+      const isMoradorChecked = currentOrigin.includes("Morador");
+      const isEmpresaChecked = currentOrigin.includes("Empresa");
+
+      box.innerHTML = `
+        <div class="pub-origin-grid">
+          <label class="pub-origin-option ${isMoradorChecked ? 'is-checked' : ''}">
+            <input type="checkbox" name="edit-origin" value="De Morador" ${isMoradorChecked ? 'checked' : ''}>
+            <span class="pub-origin-check" aria-hidden="true">✓</span>
+            <span class="pub-origin-info">
+              <strong>De Morador</strong>
+              <small>Pessoa Física</small>
+            </span>
+          </label>
+          <label class="pub-origin-option ${isEmpresaChecked ? 'is-checked' : ''}">
+            <input type="checkbox" name="edit-origin" value="De Empresa" ${isEmpresaChecked ? 'checked' : ''}>
+            <span class="pub-origin-check" aria-hidden="true">✓</span>
+            <span class="pub-origin-info">
+              <strong>De Empresa</strong>
+              <small>Pessoa Jurídica</small>
+            </span>
+          </label>
+        </div>
+      `;
+
+      const checks = $('input[name="edit-origin"]', box);
+      checks.forEach(chk => {
+        chk.addEventListener("change", () => {
+          if (!checks.some(c => c.checked)) {
+            chk.checked = true;
+          }
+          checks.forEach(c => {
+            c.closest(".pub-origin-option")?.classList.toggle("is-checked", c.checked);
+          });
+        });
+      });
+    }
+  }
+
+  function renderEditPhotos() {
+    const existBox = $("#f-edit-fotos-existentes");
+    const newBox = $("#f-edit-fotos-novas-preview");
+
+    if (existBox) {
+      if (!editExistingPhotos.length) {
+        existBox.innerHTML = `<span style="font-size:.78rem;color:var(--t3)">Nenhuma foto mantida no momento.</span>`;
+      } else {
+        existBox.innerHTML = editExistingPhotos.map((url, idx) => `
+          <div class="foto-thumb">
+            <img src="${url}" alt="Foto ${idx + 1}">
+            <button type="button" class="foto-remove btn-del-existing-photo" data-idx="${idx}" title="Remover esta foto">&times;</button>
+          </div>
+        `).join("");
+
+        $(".btn-del-existing-photo", existBox).forEach(b => {
+          b.addEventListener("click", () => {
+            const idx = parseInt(b.dataset.idx);
+            editExistingPhotos.splice(idx, 1);
+            renderEditPhotos();
+          });
+        });
+      }
+    }
+
+    if (newBox) {
+      newBox.innerHTML = editSelectedNewPhotos.map((f, idx) => `
+        <div class="foto-thumb">
+          <img src="${URL.createObjectURL(f)}" alt="Nova foto ${idx + 1}">
+          <button type="button" class="foto-remove btn-del-new-photo" data-idx="${idx}" title="Remover">&times;</button>
+        </div>
+      `).join("");
+
+      $(".btn-del-new-photo", newBox).forEach(b => {
+        b.addEventListener("click", () => {
+          const idx = parseInt(b.dataset.idx);
+          editSelectedNewPhotos.splice(idx, 1);
+          renderEditPhotos();
+        });
+      });
+    }
+  }
+
+  function openEditModal(ad) {
+    if (!ad) return;
+    const modal = $("#edit-anuncio-modal");
+    if (!modal) return;
+
+    editSelectedNewPhotos = [];
+    editExistingPhotos = Array.isArray(ad.fotos) ? [...ad.fotos] : [];
+    editCepValidated = {
+      ok: true,
+      pais: ad.pais || "BR",
+      cep: ad.cep || "",
+      cidade: ad.cidade || null,
+      uf: ad.uf || null,
+      bairro: ad.bairro || null
+    };
+
+    $("#f-edit-id").value = ad.id;
+    $("#f-edit-name").value = ad.titulo || "";
+    $("#f-edit-category").value = ad.categoria || "";
+    $("#f-edit-price").value = ad.valor_a_partir !== null ? `A partir de R$ ${Number(ad.valor_a_partir).toFixed(2).replace(".", ",")}` : "";
+    $("#f-edit-desc").value = ad.texto || "";
+    $("#f-edit-video").value = ad.video_url || "";
+    $("#f-edit-instagram").value = ad.instagram || "";
+    $("#f-edit-whatsapp").value = ad.whatsapp_contato || "";
+
+    const linkRedes = Array.isArray(ad.outras_redes) ? (ad.outras_redes.find(r => r && r.tipo === "link")?.valor || "") : "";
+    $("#f-edit-outras-redes").value = linkRedes;
+
+    const paisSel = $("#f-edit-pais");
+    if (paisSel && window.GBCep) {
+      paisSel.innerHTML = GBCep.COUNTRIES.map(([c, n]) => `<option value="${c}">${n}</option>`).join("");
+      paisSel.value = ad.pais || "BR";
+    }
+
+    const cepInput = $("#f-edit-cep");
+    if (cepInput) cepInput.value = ad.cep || "";
+    const cepStatus = $("#f-edit-cep-status");
+    if (cepStatus) {
+      const loc = [ad.bairro, ad.cidade, ad.uf].filter(Boolean).join(" · ");
+      cepStatus.textContent = "✓ " + (loc || "CEP cadastrado");
+      cepStatus.dataset.kind = "ok";
+    }
+
+    renderEditOrigin(ad);
+    renderEditPhotos();
+
+    const errBox = $("#edit-form-error");
+    if (errBox) errBox.textContent = "";
+
+    const saveBtn = $("#btn-save-edit");
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Salvar alterações";
+    }
+
+    modal.classList.add("open");
+  }
+
+  function initEditModal() {
+    const modal = $("#edit-anuncio-modal");
+    if (!modal) return;
+
+    $("#edit-anuncio-close")?.addEventListener("click", () => modal.classList.remove("open"));
+    $("#btn-cancel-edit")?.addEventListener("click", () => modal.classList.remove("open"));
+    modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("open"); });
+
+    const fileInput = $("#f-edit-fotos");
+    if (fileInput) {
+      fileInput.addEventListener("change", e => {
+        const files = [...e.target.files];
+        files.forEach(f => {
+          if (!f.type.startsWith("image/")) {
+            msg("Apenas imagens são permitidas.");
+            return;
+          }
+          if (f.size > 5 * 1024 * 1024) {
+            msg(`A imagem ${f.name} excede o limite de 5MB.`);
+            return;
+          }
+          editSelectedNewPhotos.push(f);
+        });
+        fileInput.value = "";
+        renderEditPhotos();
+      });
+    }
+
+    const cepInput = $("#f-edit-cep");
+    const paisSel = $("#f-edit-pais");
+    const cepStatus = $("#f-edit-cep-status");
+
+    async function validarEditCep() {
+      if (!cepInput || !paisSel) return null;
+      const pais = paisSel.value || "BR";
+      const cep = cepInput.value.trim();
+      if (!cep) { editCepValidated = null; if (cepStatus) cepStatus.textContent = ""; return null; }
+      if (cepStatus) { cepStatus.textContent = "Validando CEP..."; cepStatus.dataset.kind = "loading"; }
+      const res = await GBCep.validar(pais, cep);
+      if (!res.ok) {
+        editCepValidated = null;
+        if (cepStatus) { cepStatus.textContent = res.erro; cepStatus.dataset.kind = "error"; }
+        return null;
+      }
+      editCepValidated = res;
+      if (cepStatus) {
+        const loc = [res.bairro, res.cidade, res.uf].filter(Boolean).join(" · ");
+        cepStatus.textContent = "✓ " + (loc || "CEP válido");
+        cepStatus.dataset.kind = "ok";
+      }
+      return res;
+    }
+
+    if (cepInput) {
+      cepInput.addEventListener("blur", validarEditCep);
+      cepInput.addEventListener("input", () => { editCepValidated = null; });
+    }
+    if (paisSel) paisSel.addEventListener("change", () => { editCepValidated = null; validarEditCep(); });
+
+    const form = $("#edit-anuncio-form");
+    if (!form) return;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errBox = $("#edit-form-error");
+      if (errBox) errBox.textContent = "";
+      const btn = $("#btn-save-edit");
+
+      const id = $("#f-edit-id")?.value;
+      if (!id) return;
+
+      const titulo = $("#f-edit-name")?.value.trim() || "";
+      const categoria = $("#f-edit-category")?.value || "";
+      const texto = $("#f-edit-desc")?.value.trim() || "";
+      const preco = parsePrecoValor($("#f-edit-price")?.value || "");
+      const videoUrl = $("#f-edit-video")?.value.trim() || null;
+      const instagram = $("#f-edit-instagram")?.value.trim() || null;
+      const whatsappContato = $("#f-edit-whatsapp")?.value.trim() || null;
+      const outrasRedesTxt = $("#f-edit-outras-redes")?.value.trim() || "";
+      const origemAnuncio = getEditAdvertiseOrigin();
+
+      if (!titulo) { if (errBox) errBox.textContent = "Informe o título do negócio ou serviço."; $("#f-edit-name")?.focus(); return; }
+      if (!categoria) { if (errBox) errBox.textContent = "Selecione uma categoria."; $("#f-edit-category")?.focus(); return; }
+      if (isNaN(preco) || preco < 0) { if (errBox) errBox.textContent = "Informe um valor válido (ex: 45,00)."; $("#f-edit-price")?.focus(); return; }
+      if (texto.length < 15) {
+        if (errBox) errBox.textContent = "Informe a descrição do anúncio com no mínimo 15 caracteres.";
+        $("#f-edit-desc")?.focus();
+        return;
+      }
+
+      if (!whatsappContato && !instagram && !outrasRedesTxt) {
+        if (errBox) errBox.textContent = "Informe pelo menos um meio de contato (WhatsApp, Instagram ou Site/Outra rede).";
+        $("#f-edit-whatsapp")?.focus();
+        return;
+      }
+
+      const cepValido = editCepValidated || await validarEditCep();
+      if (!cepValido) {
+        if (errBox) errBox.textContent = "Valide o CEP do anúncio para continuar.";
+        cepInput?.focus();
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Salvando alterações...";
+
+      try {
+        const uploadedUrls = [];
+        for (const file of editSelectedNewPhotos) {
+          const ext = file.name.split(".").pop();
+          const path = `${GBAuth.user.id}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+          const { data: uploadData, error: uploadErr } = await GBSupabase.storage
+            .from("midias")
+            .upload(path, file, { cacheControl: "3600", upsert: false });
+
+          if (!uploadErr && uploadData) {
+            const { data: pubData } = GBSupabase.storage.from("midias").getPublicUrl(path);
+            if (pubData && pubData.publicUrl) uploadedUrls.push(pubData.publicUrl);
+          }
+        }
+
+        const fotosFinais = [...editExistingPhotos, ...uploadedUrls];
+        const outrasRedesArr = [{ tipo: "origem", valor: origemAnuncio }];
+        if (outrasRedesTxt) outrasRedesArr.push({ tipo: "link", valor: outrasRedesTxt });
+
+        const payload = {
+          titulo,
+          categoria,
+          texto,
+          valor_a_partir: preco,
+          pais: cepValido.pais,
+          cep: cepValido.cep,
+          cidade: cepValido.cidade,
+          uf: cepValido.uf,
+          bairro: cepValido.bairro,
+          fotos: fotosFinais,
+          video_url: videoUrl,
+          instagram,
+          whatsapp_contato: whatsappContato,
+          outras_redes: outrasRedesArr,
+          tipo_anuncio: origemAnuncio
+        };
+
+        const { error: dbErr } = await GBSupabase
+          .from("anuncios")
+          .update(payload)
+          .eq("id", id)
+          .eq("user_id", GBAuth.user.id);
+
+        if (dbErr) throw dbErr;
+
+        msg("Anúncio atualizado com sucesso!");
+        modal.classList.remove("open");
+        await carregarAnuncios();
+        renderDashTab("meus-anuncios");
+      } catch (err) {
+        if (errBox) errBox.textContent = "Erro ao atualizar: " + (err.message || err);
+        msg("Erro ao atualizar anúncio: " + (err.message || err));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Salvar alterações";
+      }
+    });
+  }
+
   /* ── INICIALIZAÇÃO ─────────────────────────────────────── */
   document.addEventListener("DOMContentLoaded", () => {
     initAdvertiseForm();
     initProcuraModal();
+    initEditModal();
 
     // Localização ao vivo mudou: atualiza o mural de procuras se estiver visível
     document.addEventListener("gb-local", () => {
@@ -1232,6 +1670,8 @@ window.GBAnuncios = (function () {
     renderDashboard,
     openProcuraModal,
     updateAdvertiseAccess,
-    renderAdvertiseOrigin
+    renderAdvertiseOrigin,
+    openEditModal,
+    formatAdForModal
   };
 })();

@@ -212,7 +212,7 @@ const BUSINESSES = [
     distanceMeters: 420,
     distance: "420 metros de você",
     tags: ["Marmita", "Fitness", "Pronta Entrega"],
-    publishedAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+    publishedAt: "2026-10-20T12:00:00Z",
     featured: false,
     image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80"
   },
@@ -232,7 +232,7 @@ const BUSINESSES = [
     distanceMeters: 310,
     distance: "310 metros de você",
     tags: ["Bicicleta", "Seminovo", "Oportunidade"],
-    publishedAt: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
+    publishedAt: "2026-10-19T12:00:00Z",
     featured: false,
     image: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=800&q=80"
   },
@@ -252,7 +252,7 @@ const BUSINESSES = [
     distanceMeters: 650,
     distance: "650 metros de você",
     tags: ["Artesanato", "Cerâmica", "Decoração"],
-    publishedAt: new Date(Date.now() - 26 * 3600 * 1000).toISOString(),
+    publishedAt: "2026-10-18T12:00:00Z",
     featured: false,
     image: "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800&q=80"
   },
@@ -272,7 +272,7 @@ const BUSINESSES = [
     distanceMeters: 480,
     distance: "480 metros de você",
     tags: ["Geleia", "Caseiro", "Doces"],
-    publishedAt: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
+    publishedAt: "2026-10-17T12:00:00Z",
     featured: false,
     image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&q=80"
   }
@@ -311,7 +311,7 @@ try {
 } catch (e) { }
 
 const CATEGORIES = [
-  "Todos", "Ofereço", "Alimentação", "Beleza", "Saúde", "Tecnologia",
+  "Todos", "Ofereço", "Procuro", "Alimentação", "Beleza", "Saúde", "Tecnologia",
   "Moda", "Educação", "Pets", "Lazer", "Mercado", "Serviços"
 ];
 
@@ -319,7 +319,7 @@ const CATEGORIES = [
 const state = {
   cat: "Todos",
   q: "",
-  sort: "featured",
+  sort: "recent",
   modal: null,
   theme: localStorage.getItem("gb-theme") || "dark",
   page: "hero",
@@ -350,6 +350,38 @@ function formatViews(n) {
   }
   return String(n);
 }
+
+function normSearch(str) {
+  return String(str || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function getAdAgeDays(dateStr) {
+  if (!dateStr) return 0;
+  const created = new Date(dateStr);
+  if (isNaN(created.getTime())) return 0;
+  const now = new Date();
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startCreated = new Date(created.getFullYear(), created.getMonth(), created.getDate());
+  return Math.max(0, Math.round((startToday.getTime() - startCreated.getTime()) / 86400000));
+}
+
+function formatDaysAgo(dateStr) {
+  return `Publicado há: ${getAdAgeDays(dateStr)} dia(s).`;
+}
+
+function isProcuroItem(b) {
+  return Boolean(b && (b.intencao === "procuro" || b.isProcuro === true));
+}
+
+function isOfertaItem(b) {
+  return Boolean(b && !isProcuroItem(b) && (b.isOffer === true || b.intencao === "ofereco"));
+}
+
+window.getAdAgeDays = getAdAgeDays;
+window.formatDaysAgo = formatDaysAgo;
 
 function formatTimeAgo(dateStr) {
   if (!dateStr) return "recentemente";
@@ -631,7 +663,9 @@ function initCategories() {
   const counts = {};
   BUSINESSES.forEach(b => {
     counts[b.category] = (counts[b.category] || 0) + 1;
-    if (b.isOffer) {
+    if (isProcuroItem(b)) {
+      counts["Procuro"] = (counts["Procuro"] || 0) + 1;
+    } else if (isOfertaItem(b)) {
       counts["Ofereço"] = (counts["Ofereço"] || 0) + 1;
     }
   });
@@ -640,10 +674,14 @@ function initCategories() {
     let n = 0;
     if (cat === "Todos") n = BUSINESSES.length;
     else if (cat === "Ofereço") n = counts["Ofereço"] || 0;
+    else if (cat === "Procuro") n = counts["Procuro"] || 0;
     else n = counts[cat] || 0;
 
     const pill = document.createElement("button");
-    pill.className = "cat-pill" + (cat === state.cat ? " active" : "") + (cat === "Ofereço" ? " cat-pill--offer" : "");
+    pill.className = "cat-pill"
+      + (cat === state.cat ? " active" : "")
+      + (cat === "Ofereço" ? " cat-pill--offer" : "")
+      + (cat === "Procuro" ? " cat-pill--procuro" : "");
     pill.setAttribute("role", "listitem");
     pill.dataset.cat = cat;
     pill.innerHTML = `${cat} <span class="cat-pill-count">${n}</span>`;
@@ -656,31 +694,37 @@ function initCategories() {
     wrap.appendChild(pill);
   });
 }
+window.initCategories = initCategories;
 
 /* ── Listings ────────────────────────────────────────────── */
 function filtered() {
+  const qNorm = normSearch(state.q.trim());
   let list = BUSINESSES.filter(b => {
     const matchCat = state.cat === "Todos"
       ? true
       : state.cat === "Ofereço"
-        ? Boolean(b.isOffer)
-        : b.category === state.cat;
+        ? isOfertaItem(b)
+        : state.cat === "Procuro"
+          ? isProcuroItem(b)
+          : b.category === state.cat;
 
-    const matchQuery = !state.q || [b.name, b.category, b.desc, b.price || "", ...(b.tags || [])]
-      .some(s => s.toLowerCase().includes(state.q.toLowerCase()));
+    const matchQuery = !qNorm || [b.name, b.category, b.desc, b.price || "", b.address || "", ...(b.tags || [])]
+      .some(s => normSearch(s).includes(qNorm));
 
     return matchCat && matchQuery;
   });
 
   if (window.GBLocal) list = GBLocal.filtrar(list);
 
+  const getTime = (item) => item && item.publishedAt ? new Date(item.publishedAt).getTime() || 0 : 0;
+
   if (state.sort === "distance" && window.GBLocal && GBLocal.ativo()) GBLocal.ordenar(list);
-  else if (state.sort === "featured") list.sort((a, b) => (b.featured || 0) - (a.featured || 0) || (b.rating || 0) - (a.rating || 0));
-  else if (state.sort === "recent") list.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
-  else if (state.sort === "distance") list.sort((a, b) => (a.distanceMeters || 9999) - (b.distanceMeters || 9999));
-  else if (state.sort === "rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-  else if (state.sort === "reviews") list.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
-  else if (state.sort === "views") list.sort((a, b) => (b.views || 0) - (a.views || 0));
+  else if (state.sort === "recent") list.sort((a, b) => getTime(b) - getTime(a));
+  else if (state.sort === "featured") list.sort((a, b) => (b.featured || 0) - (a.featured || 0) || getTime(b) - getTime(a) || (b.rating || 0) - (a.rating || 0));
+  else if (state.sort === "distance") list.sort((a, b) => (a.distanceMeters || 9999) - (b.distanceMeters || 9999) || getTime(b) - getTime(a));
+  else if (state.sort === "rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0) || getTime(b) - getTime(a));
+  else if (state.sort === "reviews") list.sort((a, b) => (b.reviews || 0) - (a.reviews || 0) || getTime(b) - getTime(a));
+  else if (state.sort === "views") list.sort((a, b) => (b.views || 0) - (a.views || 0) || getTime(b) - getTime(a));
   else list.sort((a, b) => a.name.localeCompare(b.name));
   return list;
 }
@@ -690,7 +734,7 @@ function renderListings() {
   const countEl = $("#listings-count");
   const list = filtered();
 
-  const labelCount = state.cat === "Ofereço" ? "oferta" : "negócio";
+  const labelCount = state.cat === "Ofereço" ? "oferta" : (state.cat === "Procuro" ? "procura" : "anúncio");
   countEl.innerHTML = `<strong>${list.length}</strong> ${labelCount}${list.length !== 1 ? "s" : ""}`;
 
   // Para os carrosséis antigos antes de recriar os cards
@@ -703,22 +747,30 @@ function renderListings() {
   }
 
   list.forEach((b, i) => {
+    const isProc = isProcuroItem(b);
+    const isOferta = isOfertaItem(b);
+
     const card = document.createElement("div");
-    card.className = "biz-card fade-in" + (b.isOffer ? " biz-card--offer" : "");
+    card.className = "biz-card fade-in" + (isProc ? " biz-card--procuro" : (isOferta ? " biz-card--offer" : ""));
     card.setAttribute("role", "listitem");
     card.style.transitionDelay = `${i * 40}ms`;
     // Remove o atraso após a entrada, para o hover responder na hora
     card.addEventListener("transitionend", () => { card.style.transitionDelay = ""; }, { once: true });
 
-    const badgesHtml = b.isOffer
+    const badgesHtml = isProc
       ? `<div class="biz-img-badges">
-           <span class="biz-badge biz-badge--offer">Ofereço</span>
+           <span class="biz-badge biz-badge--procuro">Procuro</span>
            <span class="biz-badge biz-badge--sub">${b.category}</span>
          </div>`
-      : `<span class="biz-badge">${b.category}</span>`;
+      : (isOferta
+        ? `<div class="biz-img-badges">
+             <span class="biz-badge biz-badge--offer">Ofereço</span>
+             <span class="biz-badge biz-badge--sub">${b.category}</span>
+           </div>`
+        : `<span class="biz-badge">${b.category}</span>`);
 
-    const topBadgeHtml = b.isOffer
-      ? `<span class="biz-time-badge" title="Publicado em ${formatFullDate(b.publishedAt)}">
+    const topBadgeHtml = b.publishedAt
+      ? `<span class="biz-time-badge${isProc ? " biz-time-badge--procuro" : ""}" title="Publicado em ${formatFullDate(b.publishedAt)}">
            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
            </svg>
@@ -726,16 +778,20 @@ function renderListings() {
          </span>`
       : (b.featured ? '<span class="biz-feat">Destaque</span>' : "");
 
-    const priceOrRatingHtml = b.isOffer && b.price
-      ? `<div class="biz-price">${b.price}</div>`
+    const priceOrRatingHtml = (isOferta || isProc) && b.price
+      ? `<div class="biz-price${isProc ? " biz-price--procuro" : ""}">${b.price}</div>`
       : `<div class="biz-rating">${(b.rating || 5.0).toFixed(1)}</div>`;
 
-    const metaTimeHtml = b.isOffer
+    const ageLabelHtml = (b.publishedAt || b.isUserPost)
+      ? `<div class="biz-meta-row biz-age-row">${formatDaysAgo(b.publishedAt)}</div>`
+      : "";
+
+    const metaTimeHtml = (isOferta || isProc)
       ? `<div class="biz-meta-row biz-time-meta">
            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
            </svg>
-           <span>Oferta de venda &bull; Publicado ${formatTimeAgo(b.publishedAt)}</span>
+           <span>${isProc ? "Anúncio de compra / procura" : "Oferta de venda / serviço"}</span>
          </div>`
       : "";
 
@@ -773,6 +829,7 @@ function renderListings() {
         </div>
         <div class="biz-desc">${b.desc}</div>
         <div class="biz-meta">
+          ${ageLabelHtml}
           ${metaTimeHtml}
           <div class="biz-meta-row">${b.address}</div>
           <div class="biz-meta-row">${(b.hours || "").split(",")[0]}</div>
@@ -820,6 +877,7 @@ function initToolbar() {
   const si = $("#listings-search-input");
   const sb = $("#listings-search-btn");
   const ss = $("#sort-select");
+  if (ss) ss.value = state.sort;
   const submit = () => applySearch(si.value.trim(), { go: false });
   si.addEventListener("input", submit);
   si.addEventListener("keydown", e => e.key === "Enter" && submit());
@@ -846,16 +904,19 @@ function openModal(b) {
   const rawVideo = b.videoUrl || "";
   const videoUrl = rawVideo ? (rawVideo.startsWith("http") ? rawVideo : "https://" + rawVideo) : "";
   const origem = b.origemAnuncio || "De Morador";
+  const isProc = isProcuroItem(b);
+  const intencaoLabel = isProc ? "💡 Procuro" : "🏷️ Ofereço";
 
-  const modalCatLabel = b.isOffer
-    ? `Ofereço &bull; ${b.category} &bull; ${b.offerType || "Venda no Bairro"}`
+  const modalCatLabel = (b.isUserPost || isProc || b.isOffer)
+    ? `${intencaoLabel} &bull; ${origem} &bull; ${b.category || "Geral"}`
     : `🏷️ ${origem} &bull; ${b.category || "Geral"}`;
 
+  const priceColor = isProc ? "#f87171" : "#34d399";
   const priceBoxHtml = b.price
-    ? `<div class="modal-price-box">${b.price}</div>`
+    ? `<div class="modal-price-box" style="color:${priceColor};border-color:${isProc ? 'rgba(239,68,68,.35)' : 'rgba(34,197,94,.35)'};background:${isProc ? 'rgba(239,68,68,.08)' : 'rgba(34,197,94,.08)'}">${b.price}</div>`
     : "";
 
-  const timeAgoHtml = b.publishedAt ? formatTimeAgo(b.publishedAt) : "recentemente";
+  const daysAgoText = b.publishedAt ? formatDaysAgo(b.publishedAt) : "";
   const fullDateHtml = b.publishedAt ? formatFullDate(b.publishedAt) : "";
 
   const wppDisplay = cleanPhone
@@ -875,6 +936,10 @@ function openModal(b) {
     : `<span style="color:var(--t3)">Não informado</span>`;
 
   const isOwner = Boolean(window.GBAuth && GBAuth.user && b.userId === GBAuth.user.id);
+  const waMsgText = isProc
+    ? `Olá, vi seu anúncio de compra/procura '${b.name}' no Guia de Bairro e posso te atender!`
+    : `Olá, vi seu anúncio '${b.name}' no Guia de Bairro!`;
+  const waFullUrl = waUrl ? `${waUrl}?text=${encodeURIComponent(waMsgText)}` : "";
 
   m.innerHTML = `
     <div class="modal-img" style="position:relative">
@@ -889,7 +954,7 @@ function openModal(b) {
       <div class="modal-stars-row" style="flex-wrap:wrap">
         <span class="modal-stars">${starsText(b.rating || 5.0)}</span>
         <span class="modal-reviews">&middot; ${b.reviews || 1} avaliações</span>
-        ${b.publishedAt ? `<span style="font-size:.72rem;color:var(--t3);margin-left:auto">Publicado ${timeAgoHtml}${fullDateHtml ? ' (' + fullDateHtml + ')' : ''}</span>` : ""}
+        ${daysAgoText ? `<span style="font-size:.72rem;color:var(--t2);margin-left:auto">${daysAgoText}${fullDateHtml ? ' (' + fullDateHtml + ')' : ''}</span>` : ""}
       </div>
 
       <!-- Descrição completa e destacada do produto ou serviço -->
@@ -901,7 +966,11 @@ function openModal(b) {
       <!-- Grade completa com todas as informações (preenchidas ou não) -->
       <div class="modal-info">
         <div class="modal-info-item">
-          <span class="modal-info-label">Tipo de Anúncio</span>
+          <span class="modal-info-label">Finalidade do Anúncio</span>
+          <span class="modal-info-val" style="color:${priceColor};font-weight:600">${isProc ? "💡 Procuro (Compra / Pedido)" : "🏷️ Ofereço (Oferta / Serviço)"}</span>
+        </div>
+        <div class="modal-info-item">
+          <span class="modal-info-label">Tipificação</span>
           <span class="modal-info-val">🏷️ ${origem}</span>
         </div>
         <div class="modal-info-item">
@@ -910,7 +979,7 @@ function openModal(b) {
         </div>
         <div class="modal-info-item">
           <span class="modal-info-label">Valor / Preço</span>
-          <span class="modal-info-val" style="color:#34d399;font-weight:600">${b.price || "A combinar / Sob consulta"}</span>
+          <span class="modal-info-val" style="color:${priceColor};font-weight:600">${b.price || "A combinar / Sob consulta"}</span>
         </div>
         <div class="modal-info-item">
           <span class="modal-info-label">Localização</span>
@@ -947,8 +1016,8 @@ function openModal(b) {
       <!-- Ações de contato e navegação -->
       <div class="modal-actions" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         ${cleanPhone ? `
-          <a href="${waUrl}" target="_blank" rel="noopener" class="btn btn-white" style="background:#25d366;color:#fff;border-color:#25d366">
-            💬 Conversar no WhatsApp
+          <a href="${waFullUrl}" target="_blank" rel="noopener" class="btn btn-white" style="background:#25d366;color:#fff;border-color:#25d366">
+            ${isProc ? "💬 Enviar proposta no WhatsApp" : "💬 Conversar no WhatsApp"}
           </a>
           <a href="tel:${cleanPhone}" class="btn btn-white">
             📞 Ligar

@@ -108,8 +108,12 @@ window.GBLocal = (function () {
     return lista.filter((it) => rank(it) <= 3);
   }
   function ordenar(lista) {
+    const getTs = (x) => {
+      const d = x && (x.publishedAt || x.created_at);
+      return d ? new Date(d).getTime() || 0 : 0;
+    };
     return lista.sort((a, b) =>
-      rank(a) - rank(b) || (a.distanceMeters || 9999) - (b.distanceMeters || 9999));
+      rank(a) - rank(b) || getTs(b) - getTs(a) || (a.distanceMeters || 9999) - (b.distanceMeters || 9999));
   }
 
   /* ── UI ─────────────────────────────────────────────────── */
@@ -154,11 +158,7 @@ window.GBLocal = (function () {
       statusDoLocal();
       render();
       if (mudou) {
-        if (!jaOrdenou) {
-          jaOrdenou = true;
-          const sel = $("#sort-select");
-          if (sel && sel.value !== "distance") { sel.value = "distance"; sel.dispatchEvent(new Event("change")); }
-        }
+        jaOrdenou = true;
         emitir();
       }
     } catch (e) {

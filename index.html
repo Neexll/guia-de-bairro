@@ -7,7 +7,7 @@
   <title>Guia de Bairros</title>
   <meta name="description"
     content="Encontre restaurantes, lojas e serviços no seu bairro. Anuncie seu negócio gratuitamente.">
-  <link rel="stylesheet" href="style.css?v=20261111c">
+  <link rel="stylesheet" href="style.css?v=20261118">
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23000'/><text x='5' y='24' font-family='Inter,sans-serif' font-size='22' font-weight='500' fill='%23fff'>G</text></svg>">
 </head>
@@ -240,18 +240,18 @@
           <button class="btn btn-white btn-sm" id="listings-search-btn" type="button">Buscar</button>
         </div>
 
-        <div class="sort-wrap">
-          <label for="sort-select">Ordenar</label>
-          <select id="sort-select" aria-label="Ordenar">
-            <option value="featured">Em destaque</option>
-            <option value="recent">Mais recentes (Ofertas)</option>
-            <option value="views">Mais visitados</option>
-            <option value="distance">Mais próximos</option>
-            <option value="rating">Melhor avaliados</option>
-            <option value="reviews">Mais avaliados</option>
-            <option value="az">A – Z</option>
-          </select>
-        </div>
+          <div class="sort-wrap">
+            <label for="sort-select">Ordenar</label>
+            <select id="sort-select" aria-label="Ordenar">
+              <option value="recent" selected>Mais recentes</option>
+              <option value="featured">Em destaque</option>
+              <option value="views">Mais visitados</option>
+              <option value="distance">Mais próximos</option>
+              <option value="rating">Melhor avaliados</option>
+              <option value="reviews">Mais avaliados</option>
+              <option value="az">A – Z</option>
+            </select>
+          </div>
       </div>
 
       <div id="listings-grid" class="cards-grid" role="list" aria-label="Negócios"></div>
@@ -456,14 +456,21 @@
                   </div>
 
                   <!-- Redes e contato -->
+                  <div class="f-field f-col2" style="margin-top:4px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+                      <label class="f-label" style="font-weight:600;color:var(--t1)">Meios de contato *</label>
+                      <span class="f-hint" style="color:#f59e0b;font-weight:600;margin:0">* Informe pelo menos 1 (WhatsApp, Instagram ou Site/Rede)</span>
+                    </div>
+                  </div>
+
                   <div class="f-field">
                     <label class="f-label" for="f-instagram">Instagram</label>
-                    <input class="f-input" id="f-instagram" type="text" placeholder="@seunegocio">
+                    <input class="f-input" id="f-instagram" type="text" data-mask="instagram" maxlength="31" placeholder="@seunegocio">
                   </div>
 
                   <div class="f-field">
                     <label class="f-label" for="f-pub-whatsapp">WhatsApp para contato</label>
-                    <input class="f-input" id="f-pub-whatsapp" type="tel" placeholder="(11) 90000-0000">
+                    <input class="f-input" id="f-pub-whatsapp" type="tel" data-mask="phone" maxlength="16" placeholder="(11) 90000-0000">
                   </div>
 
                   <div class="f-field f-col2">
@@ -473,8 +480,8 @@
 
                   <!-- Descrição / Texto -->
                   <div class="f-field f-col2">
-                    <label class="f-label" for="f-desc">Descrição / Texto do anúncio *</label>
-                    <textarea class="f-input" id="f-desc" name="desc" required rows="4"
+                    <label class="f-label" for="f-desc">Descrição / Texto do anúncio * (mínimo 15 caracteres)</label>
+                    <textarea class="f-input" id="f-desc" name="desc" required rows="4" minlength="15"
                       placeholder="Descreva detalhadamente o produto, serviço, diferenciais, formas de atendimento e entrega."></textarea>
                   </div>
 
@@ -619,7 +626,8 @@
         </label>
 
         <label class="auth-field">E-mail
-          <input id="auth-email" type="email" autocomplete="email" required>
+          <input id="auth-email" type="email" autocomplete="email" data-mask="email" data-hint-target="#auth-email-status" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="seuemail@exemplo.com" required>
+          <span id="auth-email-status" class="auth-field-hint" aria-live="polite"></span>
         </label>
 
         <label class="auth-field">Senha
@@ -639,7 +647,7 @@
           <p class="auth-hint">Guardamos apenas o CEP — não pedimos seu endereço completo.</p>
 
           <label class="auth-field">WhatsApp <em>(opcional)</em>
-            <input id="auth-whatsapp" type="tel" autocomplete="tel" placeholder="+55 11 90000-0000">
+            <input id="auth-whatsapp" type="tel" autocomplete="tel" data-mask="phone" maxlength="16" placeholder="(11) 90000-0000">
           </label>
           <label class="auth-check">
             <input id="auth-consent" type="checkbox" disabled>
@@ -683,7 +691,7 @@
         </div>
 
         <label class="auth-field">WhatsApp para os anunciantes te chamarem <em>(opcional)</em>
-          <input id="f-proc-whatsapp" type="tel" placeholder="(11) 90000-0000">
+          <input id="f-proc-whatsapp" type="tel" data-mask="phone" maxlength="16" placeholder="(11) 90000-0000">
         </label>
 
         <button type="submit" id="f-proc-submit" class="btn btn-white btn-lg" style="width:100%;justify-content:center;margin-top:14px">
@@ -801,12 +809,12 @@
 
           <div class="f-field">
             <label class="f-label" for="f-edit-whatsapp">WhatsApp para contato</label>
-            <input class="f-input" id="f-edit-whatsapp" type="tel" placeholder="(11) 90000-0000">
+            <input class="f-input" id="f-edit-whatsapp" type="tel" data-mask="phone" maxlength="16" placeholder="(11) 90000-0000">
           </div>
 
           <div class="f-field">
             <label class="f-label" for="f-edit-instagram">Instagram</label>
-            <input class="f-input" id="f-edit-instagram" type="text" placeholder="@seunegocio">
+            <input class="f-input" id="f-edit-instagram" type="text" data-mask="instagram" maxlength="31" placeholder="@seunegocio">
           </div>
 
           <div class="f-field f-col2">
@@ -833,12 +841,13 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20261111c"></script>
-  <script src="cep.js?v=20261111c"></script>
-  <script src="localizacao.js?v=20261111c"></script>
-  <script src="anuncios.js?v=20261111c"></script>
-  <script src="app.js?v=20261111c"></script>
-  <script src="auth.js?v=20261111c"></script>
+  <script src="config.js?v=20261118"></script>
+  <script src="cep.js?v=20261118"></script>
+  <script src="masks.js?v=20261118"></script>
+  <script src="localizacao.js?v=20261118"></script>
+  <script src="anuncios.js?v=20261118"></script>
+  <script src="app.js?v=20261118"></script>
+  <script src="auth.js?v=20261118"></script>
 </body>
 
 </html>

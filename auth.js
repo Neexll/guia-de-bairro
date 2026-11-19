@@ -63,6 +63,10 @@
     $("#auth-overlay").classList.remove("open");
     document.body.classList.remove("auth-open");
     $("#auth-error").textContent = "";
+    const emailEl = $("#auth-email");
+    if (emailEl) emailEl.classList.remove("is-valid", "is-invalid");
+    const hintEl = $("#auth-email-status");
+    if (hintEl) { hintEl.textContent = ""; hintEl.dataset.kind = ""; }
   }
 
   function setMode(m) {
@@ -127,12 +131,24 @@
     const err = $("#auth-error");
     err.textContent = "";
     const btn = $("#auth-submit");
-    const email = $("#auth-email").value.trim();
+    const emailRaw = $("#auth-email").value;
+    const email = window.GBMasks ? GBMasks.formatEmail(emailRaw) : emailRaw.trim().toLowerCase();
+    $("#auth-email").value = email;
     const password = $("#auth-password").value;
     btn.disabled = true;
 
     try {
+      const emailOk = window.GBMasks ? GBMasks.isValidEmail(email) : /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+      if (!emailOk) {
+        $("#auth-email").focus();
+        throw new Error("Informe um e-mail válido (ex: nome@dominio.com).");
+      }
+
       if (mode === "login") {
+        if (!password) {
+          $("#auth-password").focus();
+          throw new Error("Informe sua senha.");
+        }
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
         close();
@@ -144,7 +160,12 @@
       const checkedBox = document.querySelector('input[name="auth-tipo"]:checked');
       const perfilTipo = checkedBox ? checkedBox.value : "";
       const nome = $("#auth-nome").value.trim();
-      const whatsapp = $("#auth-whatsapp").value.replace(/[^\d+]/g, "");
+      const rawWpp = $("#auth-whatsapp").value.trim();
+      if (rawWpp && window.GBMasks && !GBMasks.isValidPhone(rawWpp)) {
+        $("#auth-whatsapp").focus();
+        throw new Error("Informe um WhatsApp válido com DDD (ex: (11) 90000-0000).");
+      }
+      const whatsapp = rawWpp.replace(/[^\d+]/g, "");
       const consent = $("#auth-consent").checked;
 
       if (!perfilTipo) throw new Error("Escolha o seu perfil de anunciante nos check-boxes.");
